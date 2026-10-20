@@ -1,531 +1,128 @@
-# Mobile Next - 用于移动开发与自动化的 MCP 服务器 | iOS、Android、模拟器、仿真器与真机
+# Device Farm MCP - 在 AWS Device Farm 和本地设备上自动化 iOS 与 Android 的 MCP 服务器
 
 [English](README.md) | [日本語](README.ja.md) | **简体中文**
 
-这是一个 MCP 服务器，它通过与平台无关的接口实现可扩展的移动自动化与开发，让你无需掌握 iOS 或 Android 的专门知识。你可以在仿真器、模拟器以及真机（iOS 和 Android）上运行它。
+Device Farm MCP 是一个 MCP 服务器，让 AI 智能体通过一套与平台无关的工具操作 iOS 和 Android 设备。支持的目标包括：
 
-该服务器让智能体和 LLM 能够通过结构化的无障碍（accessibility）快照，或基于截图的坐标点击，来与原生 iOS/Android 应用和设备交互。
+- **[AWS Device Farm](https://aws.amazon.com/device-farm/) 中的真机**：按需以远程访问会话（remote access session）的形式预留，并通过会话托管的 Appium 端点进行控制。
+- **你本机上的设备**：iOS 模拟器、Android 仿真器，以及通过 USB 连接的真机。
 
-**支持 Claude Code、Codex、Gemini、GitHub Copilot、Antigravity** —— 以及任何兼容 MCP 的客户端。
+智能体通过结构化的无障碍快照与应用交互，必要时才回退到基于截图的坐标点击。
 
-你可以在自己机器上的设备运行它，也可以通过 **[Mobile Next Cloud](https://mobilenext.ai/cloud?utm_source=github&utm_medium=readme&utm_campaign=mobile-mcp&utm_content=intro)** 在云端真实 iOS 和 Android 设备上运行 —— 工具完全相同，无需本地环境配置。
+**支持 Claude Code、Codex、Gemini、GitHub Copilot、Cursor** 以及任何兼容 MCP 的客户端。
 
 <h4 align="center">
-  <a href="https://github.com/mobile-next/mobile-mcp">
-    <img src="https://img.shields.io/github/stars/mobile-next/mobile-mcp" alt="Mobile Next Stars" />
-  </a>
   <a href="https://www.npmjs.com/package/@tomosia/device-farm-mcp">
-    <img src="https://img.shields.io/npm/dm/@tomosia/device-farm-mcp?logo=npm&style=flat&color=red" alt="npm" />
+    <img src="https://img.shields.io/npm/v/@tomosia/device-farm-mcp?logo=npm&style=flat&color=red" alt="npm" />
   </a>
-  <a href="https://github.com/mobile-next/mobile-mcp/releases">
-    <img src="https://img.shields.io/github/release/mobile-next/mobile-mcp" />
-  </a>
-  <a href="https://insiders.vscode.dev/redirect?url=vscode%3Amcp%2Finstall%3F%7B%22name%22%3A%22mobile-mcp%22%2C%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40tomosia%2Fdevice-farm-mcp%40latest%22%5D%7D">
-    <img src="https://img.shields.io/badge/VS_Code-VS_Code?style=flat-square&label=Install%20Server&color=0098FF" alt="Install in VS Code" />
-  </a>
-  <a href="https://github.com/mobile-next/mobile-mcp/wiki">
-    <img src="https://img.shields.io/badge/documentation-wiki-blue" alt="wiki" />
-  </a>
-  <a href="https://mobilenext.ai/join-slack?utm_source=github&utm_medium=readme&utm_campaign=mobile-mcp&utm_content=badge">
-    <img src="https://img.shields.io/badge/join-Slack-blueviolet?logo=slack&style=flat" alt="join on Slack" />
+  <a href="https://github.com/TOMOSIA-VIETNAM/device-farm-mcp/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/TOMOSIA-VIETNAM/device-farm-mcp" alt="license" />
   </a>
 </h4>
 
+> Device Farm MCP 是 [mobile-next/mobile-mcp](https://github.com/mobile-next/mobile-mcp) 的分支（fork）。远程设备来自 AWS Device Farm，而不是 Mobile Next Cloud；本地设备支持保持不变。
 
-https://github.com/user-attachments/assets/bb084777-beb3-4930-ae6f-8d3fe694ddde
+## 目录
 
+- [工作原理](#工作原理)
+- [前提条件](#前提条件)
+- [配置 AWS Device Farm](#配置-aws-device-farm)
+- [安装 MCP 服务器](#安装-mcp-服务器)
+- [验证安装](#验证安装)
+- [使用远程设备](#使用远程设备)
+- [可用的 MCP 工具](#可用的-mcp-工具)
+- [本地设备](#本地设备)
+- [Streamable HTTP 服务器模式](#streamable-http-服务器模式)
+- [环境变量](#环境变量)
+- [示例提示词](#示例提示词)
 
-<p align="center">
-    <a href="https://github.com/mobile-next/">
-        <img alt="mobile-mcp" src="https://raw.githubusercontent.com/mobile-next/mobile-next-assets/refs/heads/main/mobile-mcp-banner.png" width="600" />
-    </a>
-</p>
+## 工作原理
 
-### 主要使用场景
+```
+ MCP client (Claude Code, Cursor, ...)
+        │  stdio / Streamable HTTP
+        ▼
+ device-farm-mcp ──── local device id ────► mobilecli ──► simulator / emulator / USB device
+        │
+        └──── session ARN ──► AWS Device Farm API (us-west-2)
+                                 │  CreateRemoteAccessSession, uploads, install
+                                 ▼
+                          remote access session ──► managed Appium endpoint ──► real device
+```
 
-我们如何帮助你扩展移动自动化:
+1. `mobile_list_remote_devices` 列出支持远程访问的 Device Farm 设备。
+2. `mobile_allocate_remote_device` 在你的 Device Farm 项目中启动远程访问会话。返回的**会话 ARN** 就是其他所有 `mobile_*` 工具使用的设备 ID。
+3. 发往该设备的所有命令都会发送到会话的 Appium 端点。
+4. `mobile_release_remote_device` 停止会话，同时停止计费。
 
-- 📲 面向测试或数据录入场景的原生应用自动化（iOS 和 Android）
-- 📝 无需手动操作模拟器/仿真器或真机（iPhone、三星、Google Pixel 等）即可执行的脚本化流程与表单交互
-- 🧭 由 LLM 驱动的多步骤用户旅程自动化
-- 👆 面向智能体框架的通用移动应用交互能力
-- 🤖 为移动自动化和数据提取场景提供智能体之间的通信能力
+身份验证使用 AWS 标准凭证链，因此无需单独的登录步骤。
 
-## 主要特性
+## 前提条件
 
-- 🚀 **无障碍优先 —— 快速且低成本**: 基于原生无障碍树驱动应用（无需视觉模型，不消耗图像 token），仅在必要时回退到截图 + 坐标方式。
-- 📱 **一套 API，覆盖所有目标**: 同一套工具同时适用于 iOS 和 Android —— 模拟器、仿真器和真机皆可。
-- 🧠 **无需平台专业知识**: 不需要 XCUITest，不需要 Espresso，也不需要各平台的胶水代码 —— 描述目标，智能体来完成。
-- 🧰 **完整的设备控制**: 点击、滑动与手势；应用安装/启动/终止；屏幕录制；硬件按键；深度链接；屏幕方向。
-- 📊 **结构化、确定性的输出**: 读取真实的 UI 元素并提取结构化数据，减少纯截图方案带来的歧义。
-- 🪞 **在 Claude Code 中镜像设备**: 适用于在 Ghostty 或 kitty 中运行的 Claude Code。安装插件后运行 `/mobile-mirror`，即可在侧边窗格中查看设备的实时画面，并且无需离开终端就能点按、输入文字以及按 Home/Back。
+- [Node.js](https://nodejs.org/en/download/) v20 及以上
+- 可以使用 AWS Device Farm 的 AWS 账号。Device Farm 仅在 **`us-west-2`** 区域提供，服务器始终使用该区域。
+- 运行服务器的机器上配置好的 AWS 凭证（见下文）
+- 兼容 MCP 的客户端或智能体
 
-<p align="center">
-    <img alt="/mobile-mirror showing an iOS simulator beside a Claude Code session" src="docs/screenshots/mobile-mirror.png" width="800" />
-</p>
+如需使用本地设备，还需要 [Xcode 命令行工具](https://developer.apple.com/xcode/resources/)（iOS）和/或 [Android Platform Tools](https://developer.android.com/tools/releases/platform-tools)（Android）。
 
-### 🎯 平台支持
+## 配置 AWS Device Farm
 
-| 目标 | 是否支持 | 环境准备 |
-|---|:---:|---|
-| iOS 模拟器 | ✅ | Xcode 以及已启动的模拟器 (`xcrun simctl`) |
-| iOS 真机 | ✅ | 通过 USB 连接并已信任的设备 |
-| Android 仿真器 | ✅ | Android SDK 以及运行中的仿真器 (`adb`) |
-| Android 真机 | ✅ | `adb`，并已启用并授权 USB 调试 |
+### 1. 授予 IAM 权限
 
-## 🔧 可用的 MCP 工具
-
-### 设备管理
-- **`mobile_list_available_devices`** - 列出所有可用设备（模拟器、仿真器和真机）
-- **`mobile_get_screen_size`** - 获取移动设备的屏幕尺寸（像素）
-- **`mobile_get_orientation`** - 获取设备当前的屏幕方向
-- **`mobile_set_orientation`** - 更改屏幕方向（竖屏/横屏）
-- **`mobile_set_location`** - 覆盖设备上报的 GPS 位置，或清除该覆盖
-- **`mobile_clipboard`** - 读取或替换设备剪贴板内容
-
-### 远程设备（Mobile Next Cloud）
-- **`mobile_login_to_cloud_provider`** - 将本机与云设备提供方进行认证（基于浏览器的设备码登录）
-- **`mobile_list_remote_devices`** - 列出可从云设备池中预约的设备型号
-- **`mobile_allocate_remote_device`** - 预约一台物理云设备以供独占使用
-- **`mobile_release_remote_device`** - 将已预约的云设备释放回设备池
-
-### 应用管理
-- **`mobile_list_apps`** - 列出设备上已安装的所有应用
-- **`mobile_get_foreground_app`** - 获取当前处于前台的应用
-- **`mobile_launch_app`** - 使用包名启动应用
-- **`mobile_terminate_app`** - 停止并终止正在运行的应用
-- **`mobile_install_app`** - 从文件安装应用（.apk、.ipa、.app、.zip）
-- **`mobile_uninstall_app`** - 使用 bundle ID 或包名卸载应用
-
-### 屏幕交互
-- **`mobile_take_screenshot`** - 截取屏幕截图以了解屏幕上的内容
-- **`mobile_save_screenshot`** - 将截图保存为文件
-- **`mobile_list_elements_on_screen`** - 列出 UI 元素及其坐标和属性
-- **`mobile_click_on_screen_at_coordinates`** - 点击指定的 x,y 坐标
-- **`mobile_double_tap_on_screen`** - 双击指定坐标
-- **`mobile_long_press_on_screen_at_coordinates`** - 长按指定坐标
-- **`mobile_swipe_on_screen`** - 向任意方向滑动（上、下、左、右）
-- **`mobile_start_screen_recording`** - 开始将设备屏幕录制为视频文件
-- **`mobile_stop_screen_recording`** - 停止当前的屏幕录制并保存视频
-
-### 输入与导航
-- **`mobile_type_keys`** - 向获得焦点的元素输入文本，可选择是否提交
-- **`mobile_press_button`** - 按下设备按键（HOME、BACK、VOLUME_UP/DOWN、ENTER 等）
-- **`mobile_open_url`** - 在设备浏览器中打开 URL
-
-### 日志与崩溃报告
-- **`mobile_get_device_logs`** - 采集设备实时日志（Android 上为 logcat，iOS 上为 unified log），可选择保存到文件
-- **`mobile_list_crashes`** - 列出设备上可用的崩溃报告
-- **`mobile_get_crash`** - 按 ID 获取崩溃报告的完整内容
-- **`mobile_batch_commands`** - 在一次调用中按顺序运行多个工具（例如点击、输入、点击），可选择在最后列出屏幕元素
-
-## 🏗️ Mobile MCP 架构
-
-<p align="center">
-    <a href="https://raw.githubusercontent.com/mobile-next/mobile-next-assets/refs/heads/main/mobile-mcp-arch-1.png">
-        <img alt="mobile-mcp" src="https://raw.githubusercontent.com/mobile-next/mobile-next-assets/refs/heads/main/mobile-mcp-arch-1.png" width="600">
-    </a>
-</p>
-
-
-## 📚 Wiki 页面
-
-关于安装、配置和调试的更多细节，请查看我们的 [wiki 页面](https://github.com/mobile-next/mobile-mcp/wiki)。
-
-
-## 前置条件
-
-将 MCP 与你的智能体和移动设备连接起来所需要的东西:
-
-- [Xcode 命令行工具](https://developer.apple.com/xcode/resources/)
-- [Android Platform Tools](https://developer.android.com/tools/releases/platform-tools)
-- [node.js](https://nodejs.org/en/download/) v20 及以上
-- 支持 [MCP](https://modelcontextprotocol.io/introduction) 的基础模型或智能体，例如 [Claude MCP](https://modelcontextprotocol.io/quickstart/server)、[OpenAI Agent SDK](https://openai.github.io/openai-agents-python/mcp/)、[Copilot Studio](https://www.microsoft.com/en-us/microsoft-copilot/blog/copilot-studio/introducing-model-context-protocol-mcp-in-copilot-studio-simplified-integration-with-ai-apps-and-agents/)
-
-## 安装与配置
-
-**标准配置** 适用于大多数工具:
+运行服务器的 IAM 用户或角色需要以下 Device Farm 操作权限：
 
 ```json
 {
-  "mcpServers": {
-    "device-farm-mcp": {
-      "command": "npx",
-      "args": ["-y", "@tomosia/device-farm-mcp@latest"]
-    }
-  }
-}
-```
-
-<details>
-<summary>Amp</summary>
-
-可以通过 Amp 的 VS Code 扩展设置界面添加，或者更新你的 `settings.json` 文件:
-
-```json
-"amp.mcpServers": {
-  "device-farm-mcp": {
-    "command": "npx",
-    "args": [
-      "@tomosia/device-farm-mcp@latest"
-    ]
-  }
-}
-```
-
-**Amp CLI:**
-
-在终端中运行以下命令:
-
-```bash
-amp mcp add device-farm-mcp -- npx @tomosia/device-farm-mcp@latest
-```
-
-</details>
-
-<details>
-<summary>Antigravity 2</summary>
-
-Antigravity 没有添加 MCP 服务器的 CLI 命令，因此需要手动添加。编辑 `~/.gemini/config/mcp_config.json` 并加入:
-
-```json
-{
-  "mcpServers": {
-    "device-farm-mcp": {
-      "command": "npx",
-      "args": ["-y", "@tomosia/device-farm-mcp@latest"]
-    }
-  }
-}
-```
-
-</details>
-
-<details>
-<summary>Cline</summary>
-
-配置 Cline 时，只需将上面的 json 添加到你的 MCP 设置文件中即可。
-
-[更多内容见我们的 wiki](https://github.com/mobile-next/mobile-mcp/wiki/Cline)
-
-</details>
-
-<details>
-<summary>Claude Code</summary>
-
-在 Claude Code 中安装插件，它会添加 Mobile MCP 服务器和 `/mobile-mirror`:
-
-```
-/plugin marketplace add TOMOSIA-VIETNAM/device-farm-mcp
-/plugin install mobile-mcp@mobile-mcp
-```
-
-`/mobile-mirror [device-id]` 会打开一个显示设备实时画面的窗格。点击画面即可点按设备，输入文字即可发送按键，上方还有 Home、Back、App Switch 和 URL 按钮。显示画面需要支持 kitty 图形协议的终端，例如 kitty 或 Ghostty。
-
-如果无法使用插件，可以用 Claude Code CLI 只添加 MCP 服务器:
-
-```bash
-claude mcp add device-farm-mcp -- npx -y @tomosia/device-farm-mcp@latest
-```
-</details>
-
-<details>
-<summary>Claude Desktop</summary>
-
-参照 [MCP 安装指南](https://modelcontextprotocol.io/quickstart/user)，使用上面的 json 配置。
-
-</details>
-
-<details>
-<summary>Codex</summary>
-
-使用 Codex CLI 添加 Mobile MCP 服务器:
-
-```bash
-codex mcp add device-farm-mcp npx "@tomosia/device-farm-mcp@latest"
-```
-
-或者，创建或编辑配置文件 `~/.codex/config.toml` 并加入:
-
-```toml
-[mcp_servers.device-farm-mcp]
-command = "npx"
-args = ["@tomosia/device-farm-mcp@latest"]
-```
-
-更多信息请参阅 Codex 的 MCP 文档。
-
-</details>
-
-<details>
-<summary>Copilot</summary>
-
-使用 Copilot CLI 交互式地添加 Mobile MCP 服务器:
-
-```text
-/mcp add
-```
-
-你也可以编辑配置文件 `~/.copilot/mcp-config.json` 并加入:
-
-```json
-{
-  "mcpServers": {
-    "device-farm-mcp": {
-      "type": "local",
-      "command": "npx",
-      "tools": [
-        "*"
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "devicefarm:ListDevices",
+        "devicefarm:CreateRemoteAccessSession",
+        "devicefarm:GetRemoteAccessSession",
+        "devicefarm:StopRemoteAccessSession",
+        "devicefarm:CreateUpload",
+        "devicefarm:GetUpload",
+        "devicefarm:InstallToRemoteAccessSession"
       ],
-      "args": [
-        "@tomosia/device-farm-mcp@latest"
-      ]
+      "Resource": "*"
     }
-  }
+  ]
 }
 ```
 
-更多信息请参阅 Copilot CLI 文档。
+如果还想用同一身份通过 AWS CLI 管理项目，请额外添加 `devicefarm:ListProjects` 和 `devicefarm:CreateProject`。
 
-</details>
+### 2. 配置 AWS 凭证
 
-<details>
-<summary>Cursor</summary>
+AWS SDK 支持的任何方式都可以：
 
-#### 点击按钮安装:
+- 环境变量：`AWS_ACCESS_KEY_ID`、`AWS_SECRET_ACCESS_KEY`（临时凭证还需 `AWS_SESSION_TOKEN`）
+- `~/.aws/credentials` / `~/.aws/config` 中的配置文件（profile），通过 `AWS_PROFILE` 选择
+- AWS IAM Identity Center：`aws sso login --profile <profile>`
 
-[<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Install in Cursor">](https://cursor.com/en/install-mcp?name=Mobile%20MCP&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkB0b21vc2lhL2RldmljZS1mYXJtLW1jcEBsYXRlc3QiXX0=)
-
-#### 或手动安装:
-
-依次进入 `Cursor Settings` -> `MCP` -> `Add new MCP Server`。名称可自定义，类型选择 `command`，命令填写 `npx -y @tomosia/device-farm-mcp@latest`。你也可以点击 `Edit` 来核对配置或添加命令行参数。
-
-</details>
-
-<details>
-<summary>Gemini CLI</summary>
-
-使用 Gemini CLI 添加 Mobile MCP 服务器:
+确认该身份可以访问 Device Farm：
 
 ```bash
-gemini mcp add device-farm-mcp npx -y @tomosia/device-farm-mcp@latest
+aws devicefarm list-devices --region us-west-2 --query 'length(devices)'
 ```
 
-</details>
+### 3. 创建或选择 Device Farm 项目
 
-<details>
-<summary>Goose</summary>
-
-#### 点击按钮安装:
-
-[![Install in Goose](https://goose-docs.ai/img/extension-install-dark.svg)](https://goose-docs.ai/extension?cmd=npx&arg=-y&arg=%40tomosia%2Fdevice-farm-mcp%40latest&id=device-farm-mcp&name=Mobile%20MCP&description=Mobile%20automation%20and%20development%20for%20iOS%2C%20Android%2C%20simulators%2C%20emulators%2C%20and%20real%20devices)
-
-#### 或手动安装:
-
-依次进入 `Advanced settings` -> `Extensions` -> `Add custom extension`。名称可自定义，类型选择 `STDIO`，并将 `command` 设为 `npx -y @tomosia/device-farm-mcp@latest`。然后点击 “Add Extension”。
-
-</details>
-
-<details>
-<summary>Kiro</summary>
-
-请参照 MCP 服务器[文档](https://kiro.dev/docs/mcp/)。例如在 `.kiro/settings/mcp.json` 中:
-
-```json
-{
-  "mcpServers": {
-    "device-farm-mcp": {
-      "command": "npx",
-      "args": [
-        "@tomosia/device-farm-mcp@latest"
-      ]
-    }
-  }
-}
-```
-
-</details>
-
-<details>
-<summary>opencode</summary>
-
-请参照 MCP 服务器文档。例如在 `~/.config/opencode/opencode.json` 中:
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "device-farm-mcp": {
-      "type": "local",
-      "command": [
-        "npx",
-        "@tomosia/device-farm-mcp@latest"
-      ],
-      "enabled": true
-    }
-  }
-}
-```
-
-</details>
-
-<details>
-<summary>Windsurf</summary>
-
-打开 Windsurf 设置，进入 MCP servers，使用 `command` 类型添加一个新服务器:
+远程访问会话和应用上传都属于某个项目。列出已有项目，或新建一个：
 
 ```bash
-npx @tomosia/device-farm-mcp@latest
+aws devicefarm list-projects --region us-west-2 --query 'projects[].[name,arn]' --output table
+aws devicefarm create-project --name device-farm-mcp --region us-west-2 --query 'project.arn' --output text
 ```
 
-或者按照上文所示，将标准配置添加到设置中的 `mcpServers` 下。
+复制项目 ARN，填入 MCP 服务器配置中的 `DEVICEFARM_PROJECT_ARN`。
 
-</details>
+## 安装 MCP 服务器
 
-
-[在我们的 wiki 中了解更多](https://github.com/mobile-next/mobile-mcp/wiki)! 🚀
-
-### ✅ 验证是否正常工作
-
-服务器配置完成后，让你的智能体列出设备:
-
-> list available devices
-
-你应当会看到正在运行的模拟器、仿真器以及已连接的设备。如果能看到，说明 Mobile MCP 已正确接入。如果列表为空，请确认已经启动了模拟器或仿真器（参见[前置条件](#前置条件)）—— 需要更多帮助请查看 [wiki](https://github.com/mobile-next/mobile-mcp/wiki)。
-
-### ☁️ 扩展规模，使用云设备
-
-想扩展到数百台设备？想在 CI/CD 流水线中使用 Mobile MCP？
-
-在你的智能体中输入提示词:
-```text
-log in to mobile next cloud and then show me which remote devices are available to me
-```
-
-### Streamable HTTP 服务器模式
-
-Mobile MCP 默认通过 stdio 运行。若要改为启动 [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) 服务器，请使用 `--listen` 参数:
-
-```bash
-npx @tomosia/device-farm-mcp@latest --listen 3000
-```
-
-这会绑定到 `localhost:3000`。若要绑定到指定网络接口:
-
-```bash
-npx @tomosia/device-farm-mcp@latest --listen 0.0.0.0:3000
-```
-
-然后将你的 MCP 客户端配置为连接 `http://<host>:3000/mcp`（TLS 后可用 `https://…/mcp`）。该端点接受 Streamable HTTP（对 `/mcp` 的 `POST`）；远程模式为 **无状态**（无需会话亲和性），非常适合 Smithery 等水平扩展的托管平台。
-
-> **迁移说明:** 此前 `--listen` 在 `/mcp` 上提供已弃用的 HTTP+SSE。客户端需对 `http(s)://host:port/mcp` 使用 Streamable HTTP。`/mcp` 上原有的纯 SSE 流程已不再可用。
-
-绑定到 localhost 时，会自动启用基于 Host 请求头的 DNS 重绑定防护。
-
-#### 认证授权
-
-若要在 HTTP 服务器上强制使用 Bearer token 授权，请设置环境变量 `MOBILEMCP_AUTH`:
-
-```bash
-MOBILEMCP_AUTH=my-secret-token npx @tomosia/device-farm-mcp@latest --listen 3000
-```
-
-设置之后，所有请求都必须包含请求头 `Authorization: Bearer my-secret-token`。未设置时接受未认证连接并输出警告。
-
-### 🛠️ 如何使用
-
-将 MCP 服务器添加到你的 IDE/客户端之后，你就可以指示 AI 助手使用这些可用工具。
-例如在 Cursor 的 agent 模式下，你可以使用下面的提示词来快速验证、测试和迭代 UI 交互，从屏幕读取信息，或者走完复杂的流程。
-描述要具体，直击要点。
-
-### ✨ 提示词示例
-
-#### 工作流
-
-你可以在一条提示词中指定详细的工作流，验证业务逻辑，搭建自动化。可以尽情发挥:
-
-**搜索视频，评论、点赞并分享**
-```
-Find the video called " Beginner Recipe for Tonkotsu Ramen" by Way of
-Ramen, click on like video, after liking write a comment " this was
-delicious, will make it next Friday", share the video with the first
-contact in your whatsapp list.
-```
-
-**下载一款热门计步应用，注册、设置锻炼并给出五星好评**
-```
-Find and Download a free "Pomodoro" app that has more than 1k stars.
-Launch the app, register with my email, after registration find how to
-start a pomodoro timer. When the pomodoro timer started, go back to the
-app store and rate the app 5 stars, and leave a comment how useful the
-app is.
-```
-
-**在 Substack 中搜索、阅读、高亮、评论并保存文章**
-```
-Open Substack website, search for "Latest trends in AI automation 2025",
-open the first article, highlight the section titled "Emerging AI trends",
-and save article to reading list for later review, comment a random
-paragraph summary.
-```
-
-**预约健身课程并设置计时器**
-```
-Open ClassPass, search for yoga classes tomorrow morning within 2 miles,
-book the highest-rated class at 7 AM, confirm reservation,
-setup a timer for the booked slot in the phone
-```
-
-**查找本地活动并创建日历事件**
-```
-Open Eventbrite, search for AI startup meetup events happening this
-weekend in "Austin, TX", select the most popular one, register and RSVP
-yes to the event, setup a calendar event as a reminder.
-```
-
-**查看天气预报并通过 Whatsapp/Telegram/Slack 发送消息**
-```
-Open Weather app, check tomorrow's weather forecast for "Berlin", and
-send the summary via Whatsapp/Telegram/Slack to contact "Lauren Trown",
-thumbs up their response.
-```
-
-- **在 Zoom 中安排会议并通过邮件分享邀请**
-```
-Open Zoom app, schedule a meeting titled "AI Hackathon" for tomorrow at
-10AM with a duration of 1 hour, copy the invitation link, and send it via
-Gmail to contacts "team@example.com".
-```
-
-## 运行与配置
-
-### 环境变量
-
-| 变量 | 说明 | 示例 |
-|---|---|---|
-| `MOBILEMCP_AUTH` | 要求 Streamable HTTP 服务器（`--listen`）使用 Bearer token —— 设置后每个请求都必须发送 `Authorization: Bearer <token>`。 | `MOBILEMCP_AUTH=my-secret-token` |
-| `MOBILEMCP_DISABLE_TELEMETRY` | 关闭匿名使用情况遥测。 | `MOBILEMCP_DISABLE_TELEMETRY=1` |
-| `MOBILEMCP_ALLOW_UNSAFE_URLS` | 允许 `mobile_open_url` 打开非标准的 URL scheme（默认被阻止）。 | `MOBILEMCP_ALLOW_UNSAFE_URLS=1` |
-| `MOBILEMCP_LEGACY_ROBOT` | 对 Android 设备和 iOS 真机使用旧版的平台专用 robot。iOS 模拟器仍然使用 `mobilecli`。 | `MOBILEMCP_LEGACY_ROBOT=1` |
-
-### 模拟器、仿真器与真机
-
-启动后，Mobile MCP 可以连接到:
-- macOS/Linux 上的 iOS 模拟器
-- Linux/Windows/macOS 上的 Android 仿真器
-- iOS 或 Android 真机（需要相应的平台工具和驱动）
-
-在运行 Mobile Next Mobile MCP 之前，请确保已正确安装并配置移动平台 SDK（Xcode、Android SDK）。
-
-### 遥测
-
-Mobile MCP 通过 PostHog 和 Scarf 收集匿名的使用情况遥测数据。若要关闭，请设置环境变量 `MOBILEMCP_DISABLE_TELEMETRY`:
-
-```bash
-MOBILEMCP_DISABLE_TELEMETRY=1 npx @tomosia/device-farm-mcp@latest
-```
-
-对于 json 配置:
+适用于大多数客户端的**标准配置**：
 
 ```json
 {
@@ -534,58 +131,341 @@ MOBILEMCP_DISABLE_TELEMETRY=1 npx @tomosia/device-farm-mcp@latest
       "command": "npx",
       "args": ["-y", "@tomosia/device-farm-mcp@latest"],
       "env": {
-        "MOBILEMCP_DISABLE_TELEMETRY": "1"
+        "DEVICEFARM_PROJECT_ARN": "arn:aws:devicefarm:us-west-2:111122223333:project:abcd-1234",
+        "AWS_PROFILE": "default"
       }
     }
   }
 }
 ```
 
-### 在模拟器/仿真器上以“无头”模式运行
+- 预留设备和安装应用需要 `DEVICEFARM_PROJECT_ARN`。列出远程设备和使用本地设备不需要它。
+- `AWS_PROFILE` 是可选的。省略时使用默认凭证链，也可以换成 `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`。
+- MCP 客户端启动服务器时通常不会继承你的 shell 环境，因此请把 AWS 相关变量写在 `env` 中，而不要依赖 shell 配置文件里的 `export`。
 
-当你的机器上没有连接真机时，可以让 Mobile MCP 配合后台运行的仿真器或模拟器工作。
+**从本地代码运行**（用于测试修改，或在版本发布之前使用）：
 
-例如在 Android 上:
-1. 启动一个仿真器（avdmanager / emulator 命令）。
-2. 使用所需参数运行 Mobile MCP。
+```bash
+git clone https://github.com/TOMOSIA-VIETNAM/device-farm-mcp.git
+cd device-farm-mcp
+npm install && npm run build
+```
 
-在 iOS 上，你需要安装 Xcode，并在通过 Mobile MCP 使用某个模拟器实例之前先启动 Simulator。
-- `xcrun simctl list`
-- `xcrun simctl boot "iPhone 16"`
+然后用 `node` 指向 `lib/index.js`，代替 `npx`：
 
-## 🧩 Mobile Next 的一部分
+```json
+{
+  "mcpServers": {
+    "device-farm-mcp": {
+      "command": "node",
+      "args": ["/path/to/device-farm-mcp/lib/index.js"],
+      "env": {
+        "DEVICEFARM_PROJECT_ARN": "arn:aws:devicefarm:us-west-2:111122223333:project:abcd-1234"
+      }
+    }
+  }
+}
+```
 
-Mobile MCP 是驱动真实移动设备这套工具集中的一环:
+### 各客户端的配置
 
-- **[mobilewright](https://github.com/mobile-next/mobilewright)** —— “移动端的 Playwright”。当你准备把智能体驱动的探索式操作变成 iOS 和 Android 上**可重复、确定性的测试**时，就该升级到 mobilewright。
-- **[mobilecli](https://github.com/mobile-next/mobilecli)** —— Mobile MCP 所构建于其上的通用设备 CLI: 通过命令行或 JSON-RPC API 控制设备、模拟器和仿真器。
-- **[Mobile Next Cloud](https://mobilenext.ai/cloud?utm_source=github&utm_medium=readme&utm_campaign=mobile-mcp&utm_content=part-of-mobile-next)** —— 同一套技术栈，按需租用: 随时可用的真实 iOS 和 Android 设备。只需向你的智能体输入提示词 `log in to mobile next cloud and then show me which remote devices are available to me` 即可开始。
+以下所有示例都需要加上标准配置中的 `env` 值。
 
-## 🚀 路线图
+<details>
+<summary>Claude Code</summary>
 
-我们持续改进 Mobile MCP。想了解我们接下来在做什么，请查看 [ROADMAP.md](ROADMAP.md) —— 优先级在很大程度上取决于社区反馈，所以请告诉我们你希望看到什么。
+使用 Claude Code CLI 添加服务器：
 
-## 🤝 参与贡献
+```bash
+claude mcp add device-farm-mcp \
+  -e DEVICEFARM_PROJECT_ARN=arn:aws:devicefarm:us-west-2:111122223333:project:abcd-1234 \
+  -e AWS_PROFILE=default \
+  -- npx -y @tomosia/device-farm-mcp@latest
+```
 
-我们欢迎各种形式的贡献 —— 代码、文档、错误报告和想法。
+或者在 Claude Code 中安装插件，它会添加 MCP 服务器和 `/mobile-mirror`：
 
-- ⭐ **[给仓库点个 star](https://github.com/mobile-next/mobile-mcp)** —— 这是帮助更多人发现 Mobile MCP 最简单的方式。
-- 阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 了解如何构建、测试并提交 pull request。
-- 浏览[待处理的 issue](https://github.com/mobile-next/mobile-mcp/issues) 寻找可以着手的工作。
-- 也欢迎在我们的 [Slack 社区](https://mobilenext.ai/join-slack?utm_source=github&utm_medium=readme&utm_campaign=mobile-mcp&utm_content=contributing) 中提问和分享想法。
+```
+/plugin marketplace add TOMOSIA-VIETNAM/device-farm-mcp
+/plugin install mobile-mcp@mobile-mcp
+```
 
-也请阅读我们的[行为准则](CODE_OF_CONDUCT.md)。
+插件启动服务器时不会传入 `DEVICEFARM_PROJECT_ARN`，因此使用远程设备时，请在启动 Claude Code 的环境中设置该变量（以及所需的 AWS 变量）。
 
-# 感谢所有贡献者 ❤️
+`/mobile-mirror [device-id]` 会打开一个显示设备实时画面的窗格。点击画面即可点击设备，键盘输入会发送按键，上方还有 Home、Back、App Switch 和 URL 按钮。需要支持 kitty graphics protocol 的终端，例如 kitty 或 Ghostty。
 
-### 感谢每一位帮助改进这个项目的人。
+</details>
 
-  <a href = "https://github.com/mobile-next/mobile-mcp/graphs/contributors">
-   <img src = "https://contrib.rocks/image?repo=mobile-next/mobile-mcp"/>
- </a>
+<details>
+<summary>Claude Desktop</summary>
 
-## 隐私政策
+按照 [MCP 安装指南](https://modelcontextprotocol.io/quickstart/user)操作，使用上面的标准配置。
 
-Mobile MCP 在本地运行，仅与你所连接的设备通信。
-有关数据收集、使用、保留以及联系方式，请查看 Mobile Next 隐私政策:
-[https://mobilenext.ai/privacy](https://mobilenext.ai/privacy)。
+</details>
+
+<details>
+<summary>Codex</summary>
+
+```bash
+codex mcp add device-farm-mcp \
+  --env DEVICEFARM_PROJECT_ARN=arn:aws:devicefarm:us-west-2:111122223333:project:abcd-1234 \
+  -- npx -y @tomosia/device-farm-mcp@latest
+```
+
+或编辑 `~/.codex/config.toml`：
+
+```toml
+[mcp_servers.device-farm-mcp]
+command = "npx"
+args = ["-y", "@tomosia/device-farm-mcp@latest"]
+
+[mcp_servers.device-farm-mcp.env]
+DEVICEFARM_PROJECT_ARN = "arn:aws:devicefarm:us-west-2:111122223333:project:abcd-1234"
+AWS_PROFILE = "default"
+```
+
+</details>
+
+<details>
+<summary>Copilot CLI</summary>
+
+在 Copilot CLI 中运行 `/mcp add`，或编辑 `~/.copilot/mcp-config.json`：
+
+```json
+{
+  "mcpServers": {
+    "device-farm-mcp": {
+      "type": "local",
+      "command": "npx",
+      "tools": ["*"],
+      "args": ["-y", "@tomosia/device-farm-mcp@latest"],
+      "env": {
+        "DEVICEFARM_PROJECT_ARN": "arn:aws:devicefarm:us-west-2:111122223333:project:abcd-1234"
+      }
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Cursor</summary>
+
+前往 `Cursor Settings` -> `MCP` -> `Add new MCP Server` 添加，或将标准配置写入 `~/.cursor/mcp.json`（全局）或 `.cursor/mcp.json`（项目）。
+
+</details>
+
+<details>
+<summary>Gemini CLI</summary>
+
+```bash
+gemini mcp add device-farm-mcp \
+  -e DEVICEFARM_PROJECT_ARN=arn:aws:devicefarm:us-west-2:111122223333:project:abcd-1234 \
+  npx -y @tomosia/device-farm-mcp@latest
+```
+
+</details>
+
+<details>
+<summary>VS Code</summary>
+
+添加到 `.vscode/mcp.json`：
+
+```json
+{
+  "servers": {
+    "device-farm-mcp": {
+      "command": "npx",
+      "args": ["-y", "@tomosia/device-farm-mcp@latest"],
+      "env": {
+        "DEVICEFARM_PROJECT_ARN": "arn:aws:devicefarm:us-west-2:111122223333:project:abcd-1234"
+      }
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Cline、Kiro、Windsurf、Amp、opencode、Goose</summary>
+
+将标准配置添加到客户端的 MCP 设置中。对于只接受单条命令的客户端，使用 `npx -y @tomosia/device-farm-mcp@latest`，并在客户端的环境变量设置中指定 `DEVICEFARM_PROJECT_ARN`。
+
+</details>
+
+## 验证安装
+
+向智能体提问：
+
+```text
+显示我可以使用的远程设备
+```
+
+如果返回包含名称、平台、系统版本和可用状态的 Device Farm 设备列表，说明配置成功。如果出现凭证错误，请检查[配置 AWS Device Farm](#配置-aws-device-farm)中的步骤。
+
+对于本地设备，可以问「列出可用设备」，它会返回正在运行的模拟器、仿真器以及已连接的设备。
+
+## 使用远程设备
+
+一个典型的会话：
+
+```text
+从 Device Farm 预留一台 Android 14 或更高版本的 Android 设备，等它准备就绪后安装
+./build/app-release.apk，打开应用并用测试账号登录。完成后释放设备。
+```
+
+背后的执行过程：
+
+| 步骤 | 工具 | 说明 |
+|---|---|---|
+| 查找设备 | `mobile_list_remote_devices` | 只列出启用了远程访问的设备。 |
+| 预留设备 | `mobile_allocate_remote_device` | 可按 `platform`（必填）、`name`（完全匹配，或以 `*` 结尾进行前缀匹配，例如 `Google Pixel*`）和 `version`（例如 `">=14"`、`"18.6.2"`）筛选。设置 `wait: true` 时会阻塞等待会话进入运行状态，最长 `timeoutSeconds`（默认 900）秒。优先选择可用性高的设备。 |
+| 安装应用 | `mobile_install_app` | 将本地文件上传到项目，等待 Device Farm 处理完成后安装到会话中。Android 仅支持 `.apk`，iOS 仅支持 `.ipa`。 |
+| 操作应用 | 其他 `mobile_*` 工具 | 将会话 ARN 作为 `device` 传入。 |
+| 释放设备 | `mobile_release_remote_device` | 停止会话和计费。已安装的应用和设备状态会被清除。 |
+
+### 费用与限制
+
+- 会话运行期间，Device Farm **按设备分钟计费**。智能体会被要求在预留设备前征得同意，并在任务完成后释放设备，但请留意 AWS 账单，并释放不再需要的会话。
+- 会话在 **150 分钟**后，或 **5 分钟内没有任何命令**时会自动结束。
+- 可以在 AWS 控制台的 **Device Farm → Projects → Remote access** 中查看和停止会话，或使用命令：
+  ```bash
+  aws devicefarm list-remote-access-sessions --region us-west-2 --arn <project-arn>
+  aws devicefarm stop-remote-access-session --region us-west-2 --arn <session-arn>
+  ```
+
+### 远程设备的限制
+
+远程设备通过 Appium 控制，因此部分工具仅适用于本地设备：
+
+- 屏幕录制、设备日志和崩溃报告
+- GPS 位置覆盖、剪贴板和折叠
+- 通过元素 `ref` 点击（请改用 `mobile_list_elements_on_screen` 返回的坐标）
+- 以指定语言区域（locale）启动应用
+
+## 可用的 MCP 工具
+
+### 设备管理
+- **`mobile_list_available_devices`** - 列出本地设备（模拟器、仿真器和真机）
+- **`mobile_get_screen_size`** - 获取设备屏幕尺寸（像素）
+- **`mobile_get_orientation`** - 获取当前屏幕方向
+- **`mobile_set_orientation`** - 更改屏幕方向（竖屏/横屏）
+- **`mobile_fold_device`** - 折叠或展开可折叠设备（仅本地）
+- **`mobile_set_location`** - 覆盖设备上报的 GPS 位置，或清除覆盖（仅本地）
+- **`mobile_clipboard`** - 读取或替换设备剪贴板（仅本地）
+
+### 远程设备（AWS Device Farm）
+- **`mobile_list_remote_devices`** - 列出支持远程访问的 AWS Device Farm 设备
+- **`mobile_allocate_remote_device`** - 在匹配的设备上启动远程访问会话；会话 ARN 即其他工具使用的设备 ID
+- **`mobile_release_remote_device`** - 停止远程访问会话
+
+### 应用管理
+- **`mobile_list_apps`** - 列出已安装的应用
+- **`mobile_get_foreground_app`** - 获取当前前台应用
+- **`mobile_launch_app`** - 按包名或 Bundle ID 启动应用
+- **`mobile_terminate_app`** - 停止正在运行的应用
+- **`mobile_install_app`** - 从文件安装应用（本地支持 .apk、.ipa、.app、.zip；Device Farm 支持 .apk / .ipa）
+- **`mobile_uninstall_app`** - 按包名或 Bundle ID 卸载应用
+
+### 屏幕交互
+- **`mobile_take_screenshot`** - 截图以了解屏幕内容
+- **`mobile_save_screenshot`** - 将截图保存到文件
+- **`mobile_list_elements_on_screen`** - 列出 UI 元素及其坐标和属性
+- **`mobile_click_on_screen_at_coordinates`** - 点击 x,y 坐标或通过 ref 指定的元素
+- **`mobile_double_tap_on_screen`** - 双击坐标或通过 ref 指定的元素
+- **`mobile_long_press_on_screen_at_coordinates`** - 长按坐标或通过 ref 指定的元素
+- **`mobile_swipe_on_screen`** - 向任意方向滑动
+- **`mobile_start_screen_recording`** - 开始录制屏幕到视频文件（仅本地）
+- **`mobile_stop_screen_recording`** - 停止录制并保存视频（仅本地）
+
+### 输入与导航
+- **`mobile_type_keys`** - 向当前聚焦的元素输入文本，可选择提交
+- **`mobile_press_button`** - 按下设备按键（HOME、BACK、VOLUME_UP/DOWN、ENTER 等）
+- **`mobile_open_url`** - 在设备浏览器中打开 http/https 链接
+
+### 日志与崩溃报告（仅本地）
+- **`mobile_get_device_logs`** - 收集设备实时日志（Android 为 logcat，iOS 为 unified log），可保存到文件
+- **`mobile_list_crashes`** - 列出设备上的崩溃报告
+- **`mobile_get_crash`** - 按 ID 获取崩溃报告的完整内容
+
+### 批量执行
+- **`mobile_batch_commands`** - 在一次调用中依次执行多个工具（例如点击、输入、点击），可选择在最后列出屏幕元素
+
+## 本地设备
+
+本地设备通过 [mobilecli](https://github.com/mobile-next/mobilecli) 控制，无需任何 AWS 配置。
+
+| 目标 | 配置 |
+|---|---|
+| iOS 模拟器 | Xcode 和已启动的模拟器（`xcrun simctl boot "iPhone 16"`） |
+| iOS 真机 | 通过 USB 连接并已信任 |
+| Android 仿真器 | Android SDK 和正在运行的仿真器（`adb devices`） |
+| Android 真机 | `adb`，并已启用和授权 USB 调试 |
+
+当没有可用的本地设备时，智能体会改为建议使用 Device Farm 设备，并在预留之前征得你的同意。
+
+## Streamable HTTP 服务器模式
+
+服务器默认通过 stdio 运行。如需改为启动 [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) 服务器，请使用 `--listen`：
+
+```bash
+npx @tomosia/device-farm-mcp@latest --listen 3000          # 绑定到 localhost:3000
+npx @tomosia/device-farm-mcp@latest --listen 0.0.0.0:3000  # 绑定到所有网络接口
+```
+
+客户端连接 `http://<host>:3000/mcp`。该端点是无状态的，因此可以在负载均衡器后面运行，无需会话亲和性。绑定到 localhost 时，会自动启用基于 Host 头的 DNS 重绑定防护。
+
+服务器使用所在主机的 AWS 凭证，因此任何能访问服务器的人都可以用该账号预留 Device Farm 设备。在 localhost 之外公开时，请通过 `MOBILEMCP_AUTH` 要求 Bearer 令牌：
+
+```bash
+MOBILEMCP_AUTH=my-secret-token npx @tomosia/device-farm-mcp@latest --listen 0.0.0.0:3000
+```
+
+设置后，所有请求都必须带上 `Authorization: Bearer my-secret-token`。未设置 `MOBILEMCP_AUTH` 时，服务器会接受未经身份验证的连接并记录警告。
+
+## 环境变量
+
+| 变量 | 说明 | 示例 |
+|---|---|---|
+| `DEVICEFARM_PROJECT_ARN` | 用于远程访问会话和应用上传的 AWS Device Farm 项目。 | `arn:aws:devicefarm:us-west-2:111122223333:project:abcd-1234` |
+| `AWS_PROFILE`、`AWS_ACCESS_KEY_ID`、`AWS_SECRET_ACCESS_KEY`、`AWS_SESSION_TOKEN` | AWS SDK 标准凭证。默认凭证链中的其他方式同样适用。 | `AWS_PROFILE=devicefarm` |
+| `MOBILEMCP_AUTH` | 在 Streamable HTTP 服务器（`--listen`）上要求 Bearer 令牌。 | `my-secret-token` |
+| `MOBILEMCP_DISABLE_TELEMETRY` | 禁用匿名使用遥测（PostHog 和 Scarf）。 | `1` |
+| `MOBILEMCP_ALLOW_UNSAFE_URLS` | 允许 `mobile_open_url` 打开非标准 URL 协议（默认阻止）。 | `1` |
+| `MOBILEMCP_LEGACY_ROBOT` | 对本地 Android 设备和 iOS 真机使用旧版的平台专用 robot。iOS 模拟器仍使用 `mobilecli`。 | `1` |
+
+## 示例提示词
+
+描述要具体、直接。合适的工具由智能体选择。
+
+**在多台设备上对构建做冒烟测试**
+```text
+对 Device Farm 上的 "Google Pixel 8" 和 "Samsung Galaxy S24" 分别执行：预留设备，安装
+./build/app-release.apk，启动应用，完成新手引导，截取主屏幕截图，然后释放设备。
+如果有显示异常的页面，请报告。
+```
+
+**在 iOS 上检查流程**
+```text
+预留一台 iOS 18 或更高版本的 iPhone，安装 ./build/MyApp.ipa，用一个新的测试邮箱注册，
+并确认个人资料页面显示了该邮箱。完成后释放设备。
+```
+
+**在本地模拟器上操作**
+```text
+在已启动的 iOS 模拟器上打开设置，搜索「Wi-Fi」，告诉我当前连接的是哪个网络。
+```
+
+## 贡献
+
+欢迎贡献。构建、测试和提交 Pull Request 的方法请参阅 [CONTRIBUTING.md](CONTRIBUTING.md)，也可以浏览[未解决的 issue](https://github.com/TOMOSIA-VIETNAM/device-farm-mcp/issues)。同时请阅读我们的[行为准则](CODE_OF_CONDUCT.md)。
+
+## 致谢
+
+Device Farm MCP 基于 [Mobile Next](https://github.com/mobile-next) 的 [mobile-mcp](https://github.com/mobile-next/mobile-mcp) 和 [mobilecli](https://github.com/mobile-next/mobilecli) 构建，二者均采用 Apache-2.0 许可证。
+
+## 隐私
+
+服务器运行在你的机器上（HTTP 模式下则运行在你的主机上）。它与你的本地设备通信，对于远程设备，则使用你的凭证与 AWS Device Farm 通信。安装到远程设备上的应用会上传到你的 Device Farm 项目。除非设置 `MOBILEMCP_DISABLE_TELEMETRY=1`，否则会发送匿名使用遥测数据。详情请参阅 Mobile Next 隐私政策：https://mobilenext.ai/privacy。
