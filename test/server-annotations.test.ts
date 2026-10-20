@@ -6,7 +6,6 @@ type ToolAnnotationMatrix = Record<string, ToolAnnotations>;
 
 const expectedAnnotations: ToolAnnotationMatrix = {
 	mobile_list_available_devices: { readOnlyHint: true, openWorldHint: false },
-	mobile_login_to_cloud_provider: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
 	mobile_list_remote_devices: { readOnlyHint: true, openWorldHint: true },
 	mobile_allocate_remote_device: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
 	mobile_release_remote_device: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },

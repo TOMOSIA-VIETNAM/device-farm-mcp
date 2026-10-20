@@ -15,6 +15,8 @@ import { getJpegDimensions } from "./jpeg";
 import { describeCoordinateMapping } from "./coordinate-mapping";
 import { Mobilecli } from "./mobilecli";
 import { MobileDevice } from "./mobile-device";
+import { AppiumRobot } from "./appium-robot";
+import { DeviceFarm, isDeviceFarmSessionArn } from "./device-farm";
 import { validateOutputPath, validateFileExtension, withLowercaseScheme, writeOutputFile, createPrivateOutputPath, finishRecording } from "./utils";
 import { formatElements } from "./format-elements";
 
@@ -29,9 +31,8 @@ const ALLOWED_SCREENSHOT_EXTENSIONS = [".png", ".jpg", ".jpeg"];
 const DEFAULT_SCREENSHOT_MAX_SIZE = 1024;
 const ALLOWED_RECORDING_EXTENSIONS = [".mp4"];
 const ALLOWED_APP_EXTENSIONS = [".apk", ".ipa", ".zip", ".app"];
-const LOGIN_PROMPT_TIMEOUT_MS = 15000;
 const NO_LOCAL_DEVICES_HINT =
-	"No local device, simulator or emulator is available. Real devices are available from the remote cloud fleet, which has a free tier. " +
+	"No local device, simulator or emulator is available. Real devices are available from AWS Device Farm, which is billed per device minute. " +
 	"Tell the user, and ask whether they want to use one. If they agree, call mobile_list_remote_devices.";
 
 interface MobilecliDevice {
@@ -231,9 +232,9 @@ export const createMcpServer = (): McpServer => {
 	};
 
 	const mobilecli = new Mobilecli();
+	const deviceFarm = new DeviceFarm();
 	const activeRecordings = new Map<string, ActiveRecording>();
 	const agentVerifiedSimulators = new Set<string>();
-	const activeLoginProcesses: ChildProcess[] = [];
 	posthog("launch", {}).then();
 
 	const ensureMobilecliAvailable = (): void => {
@@ -262,6 +263,10 @@ export const createMcpServer = (): McpServer => {
 	};
 
 	const createRobotFromDevice = (deviceId: string): Robot => {
+
+		if (isDeviceFarmSessionArn(deviceId)) {
+			return new AppiumRobot(deviceId, deviceFarm);
+		}
 
 		// from now on, we must have mobilecli working
 		ensureMobilecliAvailable();
@@ -422,136 +427,53 @@ export const createMcpServer = (): McpServer => {
 	);
 
 	tool(
-		"mobile_login_to_cloud_provider",
-		"Login to Cloud Provider",
-		"Start authenticating this machine with the remote device cloud provider. This is required once before mobile_list_remote_devices or mobile_allocate_remote_device will work; if either of those fails with an authentication error, call this tool and then retry. " +
-		"This starts a browser-based device-code login and returns quickly with a URL and a one-time code - it does NOT wait for the login to complete. Show the URL and code to the user verbatim and ask them to open the URL and enter the code in their own browser. " +
-		"The login keeps running in the background after this tool returns; once the user confirms they've completed it, retry the remote devices tool that originally failed. " +
-		"Only call this after the user has asked for, or agreed to, remote/cloud devices - never call it speculatively, since it interrupts the user to act in their browser.",
-		{},
-		{ readOnlyHint: false, destructiveHint: false, openWorldHint: true },
-		async ({}) => {
-			ensureMobilecliAvailable();
-
-			const child = mobilecli.spawnRemoteLogin();
-			activeLoginProcesses.push(child);
-
-			const forget = () => {
-				const index = activeLoginProcesses.indexOf(child);
-				if (index !== -1) {
-					activeLoginProcesses.splice(index, 1);
-				}
-			};
-
-			return new Promise<string>((resolve, reject) => {
-				let output = "";
-				let settled = false;
-
-				const promptTimeout = setTimeout(() => {
-					if (!settled) {
-						settled = true;
-						forget();
-						child.kill();
-						reject(new ActionableError(`Timed out waiting for the login prompt from mobilecli. Output so far: ${output.trim() || "(none)"}`));
-					}
-				}, LOGIN_PROMPT_TIMEOUT_MS);
-
-				child.stdout?.on("data", (chunk: Buffer) => {
-					output += chunk.toString();
-
-					if (!settled && output.includes("Waiting for authorization")) {
-						settled = true;
-						clearTimeout(promptTimeout);
-
-						const urlMatch = output.match(/(https?:\/\/\S+)/);
-						const codeMatch = output.match(/enter the code:\s*(\S+)/i);
-
-						if (urlMatch && codeMatch) {
-							resolve(`Authentication to mobilenext.ai started, please open ${urlMatch[1]} and enter the code: ${codeMatch[1]}`);
-						} else {
-							resolve(`Authentication started, please check the output: ${output.trim()}`);
-						}
-					}
-				});
-
-				child.stderr?.on("data", (chunk: Buffer) => {
-					output += chunk.toString();
-				});
-
-				child.on("error", (err: Error) => {
-					forget();
-					if (!settled) {
-						settled = true;
-						clearTimeout(promptTimeout);
-						reject(new ActionableError(`Failed to start login: ${err.message}`));
-					}
-				});
-
-				child.on("exit", (code: number | null) => {
-					forget();
-					if (!settled) {
-						settled = true;
-						clearTimeout(promptTimeout);
-						reject(new ActionableError(`mobilecli auth login exited early (code ${code}). Output: ${output.trim() || "(none)"}`));
-					}
-				});
-			});
-		}
-	);
-
-	tool(
 		"mobile_list_remote_devices",
 		"List Remote Devices",
-		"List the catalog of device models (make, platform, OS version) available to reserve from the remote cloud device fleet. " +
+		"List the catalog of device models (name, platform, OS version, availability) available to reserve from AWS Device Farm. " +
 		"This is different from mobile_list_available_devices, which lists real devices and simulators/emulators already connected to this local machine and ready to use immediately at no cost. " +
-		"Remote devices live in a shared cloud fleet: they are not usable until reserved with mobile_allocate_remote_device, and reserving one may be a limited/billed resource. " +
-		"Requires mobile_login_to_cloud_provider to have been called first; if this fails with an authentication error, call that tool then retry.",
+		"Remote devices are not usable until reserved with mobile_allocate_remote_device, and reserving one is billed per device minute. " +
+		"Uses the AWS credentials configured on this machine; if this fails with a credentials error, ask the user to configure them.",
 		{},
 		{ readOnlyHint: true, openWorldHint: true },
 		async ({}) => {
-			ensureMobilecliAvailable();
-			const result = mobilecli.remoteListDevices();
-			return result;
+			return deviceFarm.listDevices();
 		}
 	);
 
 	tool(
 		"mobile_allocate_remote_device",
 		"Allocate Remote Device",
-		"Reserve a physical device from the remote cloud fleet for exclusive use, returning a device identifier usable with the other mobile_* tools. " +
-		"Unlike local devices, a remote device is a shared and billed resource borrowed for the session - never call this silently. If no local device is available, offer a remote device to the user and call this only after they agree. " +
-		"Requires mobile_login_to_cloud_provider to have been called first; if this fails with an authentication error, call that tool then retry. " +
-		"Use mobile_list_remote_devices first to see which names and versions actually exist in the fleet before filtering by them. " +
+		"Reserve a physical device from AWS Device Farm for exclusive use by starting a remote access session, returning a device identifier usable with the other mobile_* tools. " +
+		"Unlike local devices, a remote device is a billed resource borrowed for the session - never call this silently. If no local device is available, offer a remote device to the user and call this only after they agree. " +
+		"Use mobile_list_remote_devices first to see which names and versions actually exist before filtering by them. " +
+		"The session ends by itself after 150 minutes, or after 5 minutes without any command. " +
 		"Release the device with mobile_release_remote_device once the whole task is finished - releasing wipes the device's state, so do not release and reallocate between steps of the same task just to be tidy.",
 		{
 			platform: z.enum(["ios", "android"]).describe("The platform to allocate a device for"),
-			name: z.string().optional().describe("Filter by device name/model. Supports a trailing * for prefix match (e.g. \"iPhone*\"), or an exact name (e.g. \"iPhone 16\")."),
+			name: z.string().optional().describe("Filter by device name/model. Supports a trailing * for prefix match (e.g. \"Apple iPhone*\"), or an exact name (e.g. \"Google Pixel 8\")."),
 			version: z.array(z.string()).optional().describe("Filter by OS version. Supports comparison prefixes >=, >, <=, < (e.g. \">=18\"), or an exact version (e.g. \"18.6.2\"). Multiple values are ANDed together."),
-			type: z.enum(["real"]).optional().describe("Device type filter. Currently only \"real\" (physical devices) is supported by the fleet."),
 			wait: z.boolean().optional().describe("If true, block until the device has finished allocating and is ready to use, up to timeoutSeconds. If false/omitted, this returns as soon as the reservation is made, but the device may not be immediately ready."),
 			timeoutSeconds: z.coerce.number().int().positive().optional().describe("Seconds to wait for allocation when wait is true. Defaults to 900 (15 minutes). Only relevant when wait is true."),
 		},
 		{ readOnlyHint: false, destructiveHint: false, openWorldHint: true },
-		async ({ platform, name, version, type, wait, timeoutSeconds }) => {
-			ensureMobilecliAvailable();
-			const result = mobilecli.remoteAllocate({ platform, name, version, type, wait, timeoutSeconds });
-			return result;
+		async ({ platform, name, version, wait, timeoutSeconds }) => {
+			return deviceFarm.allocate({ platform, name, version, wait, timeoutSeconds });
 		}
 	);
 
 	tool(
 		"mobile_release_remote_device",
 		"Release Remote Device",
-		"Release a device previously reserved with mobile_allocate_remote_device back to the remote cloud fleet so it becomes available to others. " +
+		"Release a device previously reserved with mobile_allocate_remote_device by stopping its AWS Device Farm remote access session, which also stops billing for it. " +
 		"Releasing is destructive to the device's state: apps installed, files pushed, and any other changes made during this session are lost, and a later mobile_allocate_remote_device call may take time and could return a different physical unit. " +
 		"Only release once the whole task is finished - if there is more work to do on the same device shortly, keep holding it rather than releasing and reallocating.",
 		{
-			device: z.string().describe("The device identifier to release back to the remote fleet"),
+			device: z.string().describe("The device identifier returned by mobile_allocate_remote_device"),
 		},
 		{ readOnlyHint: false, destructiveHint: true, openWorldHint: true },
 		async ({ device }) => {
-			ensureMobilecliAvailable();
-			const result = mobilecli.remoteRelease(device);
+			const result = await deviceFarm.release(device);
+			robotCache.delete(device);
 			return result;
 		}
 	);
