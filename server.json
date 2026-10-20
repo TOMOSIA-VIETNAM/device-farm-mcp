@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.mobile-next/mobile-mcp",
+  "name": "io.github.TOMOSIA-VIETNAM/device-farm-mcp",
   "description": "MCP server for iOS and Android Mobile Development, Automation and Testing",
   "repository": {
-    "url": "https://github.com/mobile-next/mobile-mcp",
+    "url": "https://github.com/TOMOSIA-VIETNAM/device-farm-mcp",
     "source": "github"
   },
   "version": "{{VERSION}}",
@@ -11,7 +11,7 @@
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
-      "identifier": "@mobilenext/mobile-mcp",
+      "identifier": "@tomosia/device-farm-mcp",
       "version": "{{VERSION}}",
       "transport": {
         "type": "stdio"

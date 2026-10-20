@@ -28,9 +28,9 @@ Add the server to the MCP configuration.
 ```json
 {
   "mcpServers": {
-    "mobile-mcp": {
+    "device-farm-mcp": {
       "command": "npx",
-      "args": ["-y", "@mobilenext/mobile-mcp@latest"]
+      "args": ["-y", "@tomosia/device-farm-mcp@latest"]
     }
   }
 }

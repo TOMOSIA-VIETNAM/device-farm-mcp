@@ -5,4 +5,4 @@ startCommand:
     required: []
     properties: {}
   commandFunction: |-
-    () => ({ command: 'npx', args: ['-y', '@mobilenext/mobile-mcp@latest'] })
+    () => ({ command: 'npx', args: ['-y', '@tomosia/device-farm-mcp@latest'] })

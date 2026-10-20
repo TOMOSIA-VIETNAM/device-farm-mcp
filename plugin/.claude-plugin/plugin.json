@@ -14,7 +14,7 @@
 		"mobile-mcp": {
 			"type": "stdio",
 			"command": "npx",
-			"args": ["-y", "@mobilenext/mobile-mcp@latest"]
+			"args": ["-y", "@tomosia/device-farm-mcp@latest"]
 		}
 	},
 	"types": "./types/index.d.ts"

@@ -14,13 +14,13 @@ Run it against devices on your own machine, or against real iOS and Android devi
   <a href="https://github.com/mobile-next/mobile-mcp">
     <img src="https://img.shields.io/github/stars/mobile-next/mobile-mcp" alt="Mobile Next Stars" />
   </a>
-  <a href="https://www.npmjs.com/package/@mobilenext/mobile-mcp">
-    <img src="https://img.shields.io/npm/dm/@mobilenext/mobile-mcp?logo=npm&style=flat&color=red" alt="npm" />
+  <a href="https://www.npmjs.com/package/@tomosia/device-farm-mcp">
+    <img src="https://img.shields.io/npm/dm/@tomosia/device-farm-mcp?logo=npm&style=flat&color=red" alt="npm" />
   </a>
   <a href="https://github.com/mobile-next/mobile-mcp/releases">
     <img src="https://img.shields.io/github/release/mobile-next/mobile-mcp" />
   </a>
-  <a href="https://insiders.vscode.dev/redirect?url=vscode%3Amcp%2Finstall%3F%7B%22name%22%3A%22mobile-mcp%22%2C%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40mobilenext%2Fmobile-mcp%40latest%22%5D%7D">
+  <a href="https://insiders.vscode.dev/redirect?url=vscode%3Amcp%2Finstall%3F%7B%22name%22%3A%22mobile-mcp%22%2C%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40tomosia%2Fdevice-farm-mcp%40latest%22%5D%7D">
     <img src="https://img.shields.io/badge/VS_Code-VS_Code?style=flat-square&label=Install%20Server&color=0098FF" alt="Install in VS Code" />
   </a>
   <a href="https://github.com/mobile-next/mobile-mcp/wiki">
@@ -93,11 +93,10 @@ How we help to scale mobile automation:
 - **`mobile_set_location`** - Override the GPS location reported by the device, or clear the override
 - **`mobile_clipboard`** - Read or replace the device clipboard
 
-### Remote Devices (Mobile Next Cloud)
-- **`mobile_login_to_cloud_provider`** - Authenticate this machine with the cloud device provider (browser-based device-code login)
-- **`mobile_list_remote_devices`** - List device models available to reserve from the cloud fleet
-- **`mobile_allocate_remote_device`** - Reserve a physical cloud device for exclusive use
-- **`mobile_release_remote_device`** - Release a reserved cloud device back to the fleet
+### Remote Devices (AWS Device Farm)
+- **`mobile_list_remote_devices`** - List AWS Device Farm devices that support remote access
+- **`mobile_allocate_remote_device`** - Start a remote access session on a matching device; the session ARN is the device id for the other tools
+- **`mobile_release_remote_device`** - Stop the remote access session
 
 ### App Management
 - **`mobile_list_apps`** - List all installed apps on the device
@@ -159,9 +158,36 @@ What you will need to connect MCP with your agent and mobile devices:
 ```json
 {
   "mcpServers": {
-    "mobile-mcp": {
+    "device-farm-mcp": {
       "command": "npx",
-      "args": ["-y", "@mobilenext/mobile-mcp@latest"]
+      "args": ["-y", "@tomosia/device-farm-mcp@latest"],
+      "env": {
+        "DEVICEFARM_PROJECT_ARN": "arn:aws:devicefarm:us-west-2:111122223333:project:abcd-1234"
+      }
+    }
+  }
+}
+```
+
+`DEVICEFARM_PROJECT_ARN` is only needed for AWS Device Farm devices, see [Scale up, use a cloud device](#️-scale-up-use-a-cloud-device). Add `"AWS_PROFILE": "<profile>"` to `env` when the Device Farm credentials are not in the default AWS profile.
+
+**Running from a local checkout** (before the package is published, or to test changes):
+
+```bash
+npm install && npm run build
+```
+
+Then use `node` with the absolute path to `lib/index.js` instead of `npx`:
+
+```json
+{
+  "mcpServers": {
+    "device-farm-mcp": {
+      "command": "node",
+      "args": ["/path/to/device-farm-mcp/lib/index.js"],
+      "env": {
+        "DEVICEFARM_PROJECT_ARN": "arn:aws:devicefarm:us-west-2:111122223333:project:abcd-1234"
+      }
     }
   }
 }
@@ -174,10 +200,10 @@ Add via the Amp VS Code extension settings screen or by updating your `settings.
 
 ```json
 "amp.mcpServers": {
-  "mobile-mcp": {
+  "device-farm-mcp": {
     "command": "npx",
     "args": [
-      "@mobilenext/mobile-mcp@latest"
+      "@tomosia/device-farm-mcp@latest"
     ]
   }
 }
@@ -188,7 +214,7 @@ Add via the Amp VS Code extension settings screen or by updating your `settings.
 Run the following command in your terminal:
 
 ```bash
-amp mcp add mobile-mcp -- npx @mobilenext/mobile-mcp@latest
+amp mcp add device-farm-mcp -- npx @tomosia/device-farm-mcp@latest
 ```
 
 </details>
@@ -201,9 +227,9 @@ Antigravity doesn't have a CLI command to add MCP servers, so add it manually. E
 ```json
 {
   "mcpServers": {
-    "mobile-mcp": {
+    "device-farm-mcp": {
       "command": "npx",
-      "args": ["-y", "@mobilenext/mobile-mcp@latest"]
+      "args": ["-y", "@tomosia/device-farm-mcp@latest"]
     }
   }
 }
@@ -226,7 +252,7 @@ To setup Cline, just add the json above to your MCP settings file.
 Install the plugin from inside Claude Code. It adds the Mobile MCP server and `/mobile-mirror`:
 
 ```
-/plugin marketplace add mobile-next/mobile-mcp
+/plugin marketplace add TOMOSIA-VIETNAM/device-farm-mcp
 /plugin install mobile-mcp@mobile-mcp
 ```
 
@@ -235,7 +261,9 @@ Install the plugin from inside Claude Code. It adds the Mobile MCP server and `/
 If you can't use plugins, add only the MCP server with the Claude Code CLI:
 
 ```bash
-claude mcp add mobile-mcp -- npx -y @mobilenext/mobile-mcp@latest
+claude mcp add device-farm-mcp \
+  -e DEVICEFARM_PROJECT_ARN=arn:aws:devicefarm:us-west-2:111122223333:project:abcd-1234 \
+  -- npx -y @tomosia/device-farm-mcp@latest
 ```
 </details>
 
@@ -252,15 +280,15 @@ Follow the [MCP install guide](https://modelcontextprotocol.io/quickstart/user),
 Use the Codex CLI to add the Mobile MCP server:
 
 ```bash
-codex mcp add mobile-mcp npx "@mobilenext/mobile-mcp@latest"
+codex mcp add device-farm-mcp npx "@tomosia/device-farm-mcp@latest"
 ```
 
 Alternatively, create or edit the configuration file `~/.codex/config.toml` and add:
 
 ```toml
-[mcp_servers.mobile-mcp]
+[mcp_servers.device-farm-mcp]
 command = "npx"
-args = ["@mobilenext/mobile-mcp@latest"]
+args = ["@tomosia/device-farm-mcp@latest"]
 ```
 
 For more information, see the Codex MCP documentation.
@@ -281,14 +309,14 @@ You can edit the configuration file `~/.copilot/mcp-config.json` and add:
 ```json
 {
   "mcpServers": {
-    "mobile-mcp": {
+    "device-farm-mcp": {
       "type": "local",
       "command": "npx",
       "tools": [
         "*"
       ],
       "args": [
-        "@mobilenext/mobile-mcp@latest"
+        "@tomosia/device-farm-mcp@latest"
       ]
     }
   }
@@ -304,11 +332,11 @@ For more information, see the Copilot CLI documentation.
 
 #### Click the button to install:
 
-[<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Install in Cursor">](https://cursor.com/en/install-mcp?name=Mobile%20MCP&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBtb2JpbGVuZXh0L21vYmlsZS1tY3BAbGF0ZXN0Il19)
+[<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Install in Cursor">](https://cursor.com/en/install-mcp?name=Mobile%20MCP&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkB0b21vc2lhL2RldmljZS1mYXJtLW1jcEBsYXRlc3QiXX0=)
 
 #### Or install manually:
 
-Go to `Cursor Settings` -> `MCP` -> `Add new MCP Server`. Name to your liking, use `command` type with the command `npx -y @mobilenext/mobile-mcp@latest`. You can also verify config or add command like arguments via clicking `Edit`.
+Go to `Cursor Settings` -> `MCP` -> `Add new MCP Server`. Name to your liking, use `command` type with the command `npx -y @tomosia/device-farm-mcp@latest`. You can also verify config or add command like arguments via clicking `Edit`.
 
 </details>
 
@@ -318,7 +346,7 @@ Go to `Cursor Settings` -> `MCP` -> `Add new MCP Server`. Name to your liking, u
 Use the Gemini CLI to add the Mobile MCP server:
 
 ```bash
-gemini mcp add mobile-mcp npx -y @mobilenext/mobile-mcp@latest
+gemini mcp add device-farm-mcp npx -y @tomosia/device-farm-mcp@latest
 ```
 
 </details>
@@ -328,11 +356,11 @@ gemini mcp add mobile-mcp npx -y @mobilenext/mobile-mcp@latest
 
 #### Click the button to install:
 
-[![Install in Goose](https://goose-docs.ai/img/extension-install-dark.svg)](https://goose-docs.ai/extension?cmd=npx&arg=-y&arg=%40mobilenext%2Fmobile-mcp%40latest&id=mobile-mcp&name=Mobile%20MCP&description=Mobile%20automation%20and%20development%20for%20iOS%2C%20Android%2C%20simulators%2C%20emulators%2C%20and%20real%20devices)
+[![Install in Goose](https://goose-docs.ai/img/extension-install-dark.svg)](https://goose-docs.ai/extension?cmd=npx&arg=-y&arg=%40tomosia%2Fdevice-farm-mcp%40latest&id=device-farm-mcp&name=Mobile%20MCP&description=Mobile%20automation%20and%20development%20for%20iOS%2C%20Android%2C%20simulators%2C%20emulators%2C%20and%20real%20devices)
 
 #### Or install manually:
 
-Go to `Advanced settings` -> `Extensions` -> `Add custom extension`. Name to your liking, use type `STDIO`, and set the `command` to `npx -y @mobilenext/mobile-mcp@latest`. Click "Add Extension".
+Go to `Advanced settings` -> `Extensions` -> `Add custom extension`. Name to your liking, use type `STDIO`, and set the `command` to `npx -y @tomosia/device-farm-mcp@latest`. Click "Add Extension".
 
 </details>
 
@@ -344,10 +372,10 @@ Follow the MCP Servers [documentation](https://kiro.dev/docs/mcp/). For example 
 ```json
 {
   "mcpServers": {
-    "mobile-mcp": {
+    "device-farm-mcp": {
       "command": "npx",
       "args": [
-        "@mobilenext/mobile-mcp@latest"
+        "@tomosia/device-farm-mcp@latest"
       ]
     }
   }
@@ -365,11 +393,11 @@ Follow the MCP Servers documentation. For example in `~/.config/opencode/opencod
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "mobile-mcp": {
+    "device-farm-mcp": {
       "type": "local",
       "command": [
         "npx",
-        "@mobilenext/mobile-mcp@latest"
+        "@tomosia/device-farm-mcp@latest"
       ],
       "enabled": true
     }
@@ -385,7 +413,7 @@ Follow the MCP Servers documentation. For example in `~/.config/opencode/opencod
 Open Windsurf settings, navigate to MCP servers, and add a new server using the `command` type with:
 
 ```bash
-npx @mobilenext/mobile-mcp@latest
+npx @tomosia/device-farm-mcp@latest
 ```
 
 Or add the standard config under `mcpServers` in your settings as shown above.
@@ -405,25 +433,34 @@ You should get back your running simulators, emulators, and connected devices. I
 
 ### ☁️ Scale up, use a cloud device
 
-Want to scale to hundreds of devices? Use Mobile MCP in your CI/CD pipeline?
+Remote devices come from [AWS Device Farm](https://aws.amazon.com/device-farm/) remote access sessions, driven through the session's managed Appium endpoint.
+
+1. Configure AWS credentials the usual way (environment variables, `~/.aws/credentials` or `aws sso login`). The identity needs `devicefarm:ListDevices`, `CreateRemoteAccessSession`, `GetRemoteAccessSession`, `StopRemoteAccessSession`, `CreateUpload`, `GetUpload` and `InstallToRemoteAccessSession`.
+2. Set `DEVICEFARM_PROJECT_ARN` in the MCP server's `env` to the ARN of your Device Farm project. List existing projects, or create one:
+   ```bash
+   aws devicefarm list-projects --region us-west-2 --query 'projects[].[name,arn]' --output table
+   aws devicefarm create-project --name device-farm-mcp --region us-west-2 --query 'project.arn' --output text
+   ```
 
 In your Agent, prompt:
 ```text
-log in to mobile next cloud and then show me which remote devices are available to me
+show me which remote devices are available to me
 ```
+
+Device Farm bills per device minute. A session ends after 150 minutes, or after 5 minutes without commands. Installing an app uploads the local `.apk` / `.ipa` to the project first.
 
 ### Streamable HTTP Server Mode
 
 By default, Mobile MCP runs over stdio. To start a [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) server instead, use the `--listen` flag:
 
 ```bash
-npx @mobilenext/mobile-mcp@latest --listen 3000
+npx @tomosia/device-farm-mcp@latest --listen 3000
 ```
 
 This binds to `localhost:3000`. To bind to a specific interface:
 
 ```bash
-npx @mobilenext/mobile-mcp@latest --listen 0.0.0.0:3000
+npx @tomosia/device-farm-mcp@latest --listen 0.0.0.0:3000
 ```
 
 Then configure your MCP client to connect to `http://<host>:3000/mcp` (or `https://…/mcp` behind TLS). The endpoint accepts Streamable HTTP (`POST` on `/mcp`); remote mode is **stateless** (no session affinity required), which works well with Smithery and other horizontal hosts.
@@ -437,7 +474,7 @@ When binding to localhost, Host-header DNS rebinding protection is enabled autom
 To require Bearer token authorization on the HTTP server, set the `MOBILEMCP_AUTH` environment variable:
 
 ```bash
-MOBILEMCP_AUTH=my-secret-token npx @mobilenext/mobile-mcp@latest --listen 3000
+MOBILEMCP_AUTH=my-secret-token npx @tomosia/device-farm-mcp@latest --listen 3000
 ```
 
 When set, all requests must include the header `Authorization: Bearer my-secret-token`. When unset, the server accepts unauthenticated connections and logs a warning.
@@ -516,6 +553,7 @@ Gmail to contacts "team@example.com".
 | `MOBILEMCP_AUTH` | Require a Bearer token on the Streamable HTTP server (`--listen`) — every request must then send `Authorization: Bearer <token>`. | `MOBILEMCP_AUTH=my-secret-token` |
 | `MOBILEMCP_DISABLE_TELEMETRY` | Disable anonymous usage telemetry. | `MOBILEMCP_DISABLE_TELEMETRY=1` |
 | `MOBILEMCP_ALLOW_UNSAFE_URLS` | Allow `mobile_open_url` to open non-standard URL schemes (blocked by default). | `MOBILEMCP_ALLOW_UNSAFE_URLS=1` |
+| `DEVICEFARM_PROJECT_ARN` | AWS Device Farm project used to allocate remote devices and upload apps. | `DEVICEFARM_PROJECT_ARN=arn:aws:devicefarm:us-west-2:111122223333:project:abcd-1234` |
 | `MOBILEMCP_LEGACY_ROBOT` | Use the legacy platform-specific robots for Android devices and physical iOS devices. iOS simulators continue to use `mobilecli`. | `MOBILEMCP_LEGACY_ROBOT=1` |
 
 ### Simulators, Emulators, and Real Devices
@@ -532,7 +570,7 @@ Make sure you have your mobile platform SDKs (Xcode, Android SDK) installed and 
 Mobile MCP collects anonymous usage telemetry via PostHog and Scarf. To disable it, set the `MOBILEMCP_DISABLE_TELEMETRY` environment variable:
 
 ```bash
-MOBILEMCP_DISABLE_TELEMETRY=1 npx @mobilenext/mobile-mcp@latest
+MOBILEMCP_DISABLE_TELEMETRY=1 npx @tomosia/device-farm-mcp@latest
 ```
 
 For json configurations:
@@ -540,9 +578,9 @@ For json configurations:
 ```json
 {
   "mcpServers": {
-    "mobile-mcp": {
+    "device-farm-mcp": {
       "command": "npx",
-      "args": ["-y", "@mobilenext/mobile-mcp@latest"],
+      "args": ["-y", "@tomosia/device-farm-mcp@latest"],
       "env": {
         "MOBILEMCP_DISABLE_TELEMETRY": "1"
       }
