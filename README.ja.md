@@ -14,13 +14,13 @@
   <a href="https://github.com/mobile-next/mobile-mcp">
     <img src="https://img.shields.io/github/stars/mobile-next/mobile-mcp" alt="Mobile Next Stars" />
   </a>
-  <a href="https://www.npmjs.com/package/@mobilenext/mobile-mcp">
-    <img src="https://img.shields.io/npm/dm/@mobilenext/mobile-mcp?logo=npm&style=flat&color=red" alt="npm" />
+  <a href="https://www.npmjs.com/package/@tomosia/device-farm-mcp">
+    <img src="https://img.shields.io/npm/dm/@tomosia/device-farm-mcp?logo=npm&style=flat&color=red" alt="npm" />
   </a>
   <a href="https://github.com/mobile-next/mobile-mcp/releases">
     <img src="https://img.shields.io/github/release/mobile-next/mobile-mcp" />
   </a>
-  <a href="https://insiders.vscode.dev/redirect?url=vscode%3Amcp%2Finstall%3F%7B%22name%22%3A%22mobile-mcp%22%2C%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40mobilenext%2Fmobile-mcp%40latest%22%5D%7D">
+  <a href="https://insiders.vscode.dev/redirect?url=vscode%3Amcp%2Finstall%3F%7B%22name%22%3A%22mobile-mcp%22%2C%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40tomosia%2Fdevice-farm-mcp%40latest%22%5D%7D">
     <img src="https://img.shields.io/badge/VS_Code-VS_Code?style=flat-square&label=Install%20Server&color=0098FF" alt="Install in VS Code" />
   </a>
   <a href="https://github.com/mobile-next/mobile-mcp/wiki">
@@ -149,9 +149,9 @@ MCP をエージェントおよびモバイルデバイスに接続するため�
 ```json
 {
   "mcpServers": {
-    "mobile-mcp": {
+    "device-farm-mcp": {
       "command": "npx",
-      "args": ["-y", "@mobilenext/mobile-mcp@latest"]
+      "args": ["-y", "@tomosia/device-farm-mcp@latest"]
     }
   }
 }
@@ -164,10 +164,10 @@ Amp の VS Code 拡張機能の設定画面から追加するか、`settings.jso
 
 ```json
 "amp.mcpServers": {
-  "mobile-mcp": {
+  "device-farm-mcp": {
     "command": "npx",
     "args": [
-      "@mobilenext/mobile-mcp@latest"
+      "@tomosia/device-farm-mcp@latest"
     ]
   }
 }
@@ -178,7 +178,7 @@ Amp の VS Code 拡張機能の設定画面から追加するか、`settings.jso
 ターミナルで次のコマンドを実行します:
 
 ```bash
-amp mcp add mobile-mcp -- npx @mobilenext/mobile-mcp@latest
+amp mcp add device-farm-mcp -- npx @tomosia/device-farm-mcp@latest
 ```
 
 </details>
@@ -191,9 +191,9 @@ Antigravity には MCP サーバーを追加する CLI コマンドがないた�
 ```json
 {
   "mcpServers": {
-    "mobile-mcp": {
+    "device-farm-mcp": {
       "command": "npx",
-      "args": ["-y", "@mobilenext/mobile-mcp@latest"]
+      "args": ["-y", "@tomosia/device-farm-mcp@latest"]
     }
   }
 }
@@ -216,7 +216,7 @@ Cline をセットアップするには、上記の json を MCP 設定ファイ
 Claude Code 内でプラグインをインストールします。Mobile MCP サーバーと `/mobile-mirror` が追加されます:
 
 ```
-/plugin marketplace add mobile-next/mobile-mcp
+/plugin marketplace add TOMOSIA-VIETNAM/device-farm-mcp
 /plugin install mobile-mcp@mobile-mcp
 ```
 
@@ -225,7 +225,7 @@ Claude Code 内でプラグインをインストールします。Mobile MCP サ
 プラグインを使えない場合は、Claude Code CLI で MCP サーバーのみを追加します:
 
 ```bash
-claude mcp add mobile-mcp -- npx -y @mobilenext/mobile-mcp@latest
+claude mcp add device-farm-mcp -- npx -y @tomosia/device-farm-mcp@latest
 ```
 </details>
 
@@ -242,15 +242,15 @@ claude mcp add mobile-mcp -- npx -y @mobilenext/mobile-mcp@latest
 Codex CLI を使って Mobile MCP サーバーを追加します:
 
 ```bash
-codex mcp add mobile-mcp npx "@mobilenext/mobile-mcp@latest"
+codex mcp add device-farm-mcp npx "@tomosia/device-farm-mcp@latest"
 ```
 
 あるいは、設定ファイル `~/.codex/config.toml` を作成または編集して次を追加します:
 
 ```toml
-[mcp_servers.mobile-mcp]
+[mcp_servers.device-farm-mcp]
 command = "npx"
-args = ["@mobilenext/mobile-mcp@latest"]
+args = ["@tomosia/device-farm-mcp@latest"]
 ```
 
 詳細は Codex の MCP ドキュメントをご覧ください。
@@ -271,14 +271,14 @@ Copilot CLI を使って対話的に Mobile MCP サーバーを追加します:
 ```json
 {
   "mcpServers": {
-    "mobile-mcp": {
+    "device-farm-mcp": {
       "type": "local",
       "command": "npx",
       "tools": [
         "*"
       ],
       "args": [
-        "@mobilenext/mobile-mcp@latest"
+        "@tomosia/device-farm-mcp@latest"
       ]
     }
   }
@@ -294,11 +294,11 @@ Copilot CLI を使って対話的に Mobile MCP サーバーを追加します:
 
 #### ボタンをクリックしてインストール:
 
-[<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Install in Cursor">](https://cursor.com/en/install-mcp?name=Mobile%20MCP&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBtb2JpbGVuZXh0L21vYmlsZS1tY3BAbGF0ZXN0Il19)
+[<img src="https://cursor.com/deeplink/mcp-install-dark.svg" alt="Install in Cursor">](https://cursor.com/en/install-mcp?name=Mobile%20MCP&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkB0b21vc2lhL2RldmljZS1mYXJtLW1jcEBsYXRlc3QiXX0=)
 
 #### または手動でインストール:
 
-`Cursor Settings` -> `MCP` -> `Add new MCP Server` を開きます。名前は任意で、`command` タイプを選び、コマンドに `npx -y @mobilenext/mobile-mcp@latest` を指定します。`Edit` をクリックして設定の確認やコマンド引数の追加もできます。
+`Cursor Settings` -> `MCP` -> `Add new MCP Server` を開きます。名前は任意で、`command` タイプを選び、コマンドに `npx -y @tomosia/device-farm-mcp@latest` を指定します。`Edit` をクリックして設定の確認やコマンド引数の追加もできます。
 
 </details>
 
@@ -308,7 +308,7 @@ Copilot CLI を使って対話的に Mobile MCP サーバーを追加します:
 Gemini CLI を使って Mobile MCP サーバーを追加します:
 
 ```bash
-gemini mcp add mobile-mcp npx -y @mobilenext/mobile-mcp@latest
+gemini mcp add device-farm-mcp npx -y @tomosia/device-farm-mcp@latest
 ```
 
 </details>
@@ -318,11 +318,11 @@ gemini mcp add mobile-mcp npx -y @mobilenext/mobile-mcp@latest
 
 #### ボタンをクリックしてインストール:
 
-[![Install in Goose](https://goose-docs.ai/img/extension-install-dark.svg)](https://goose-docs.ai/extension?cmd=npx&arg=-y&arg=%40mobilenext%2Fmobile-mcp%40latest&id=mobile-mcp&name=Mobile%20MCP&description=Mobile%20automation%20and%20development%20for%20iOS%2C%20Android%2C%20simulators%2C%20emulators%2C%20and%20real%20devices)
+[![Install in Goose](https://goose-docs.ai/img/extension-install-dark.svg)](https://goose-docs.ai/extension?cmd=npx&arg=-y&arg=%40tomosia%2Fdevice-farm-mcp%40latest&id=device-farm-mcp&name=Mobile%20MCP&description=Mobile%20automation%20and%20development%20for%20iOS%2C%20Android%2C%20simulators%2C%20emulators%2C%20and%20real%20devices)
 
 #### または手動でインストール:
 
-`Advanced settings` -> `Extensions` -> `Add custom extension` を開きます。名前は任意で、タイプに `STDIO` を選び、`command` に `npx -y @mobilenext/mobile-mcp@latest` を設定します。「Add Extension」をクリックしてください。
+`Advanced settings` -> `Extensions` -> `Add custom extension` を開きます。名前は任意で、タイプに `STDIO` を選び、`command` に `npx -y @tomosia/device-farm-mcp@latest` を設定します。「Add Extension」をクリックしてください。
 
 </details>
 
@@ -334,10 +334,10 @@ MCP サーバーの[ドキュメント](https://kiro.dev/docs/mcp/)に従って�
 ```json
 {
   "mcpServers": {
-    "mobile-mcp": {
+    "device-farm-mcp": {
       "command": "npx",
       "args": [
-        "@mobilenext/mobile-mcp@latest"
+        "@tomosia/device-farm-mcp@latest"
       ]
     }
   }
@@ -355,11 +355,11 @@ MCP サーバーのドキュメントに従ってください。例えば `~/.co
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "mobile-mcp": {
+    "device-farm-mcp": {
       "type": "local",
       "command": [
         "npx",
-        "@mobilenext/mobile-mcp@latest"
+        "@tomosia/device-farm-mcp@latest"
       ],
       "enabled": true
     }
@@ -375,7 +375,7 @@ MCP サーバーのドキュメントに従ってください。例えば `~/.co
 Windsurf の設定を開き、MCP servers に移動して、`command` タイプの新しいサーバーを次の内容で追加します:
 
 ```bash
-npx @mobilenext/mobile-mcp@latest
+npx @tomosia/device-farm-mcp@latest
 ```
 
 または、上記の標準設定を設定ファイルの `mcpServers` の下に追加してください。
@@ -407,13 +407,13 @@ log in to mobile next cloud and then show me which remote devices are available 
 Mobile MCP はデフォルトで stdio 上で動作します。代わりに [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) サーバーを起動するには、`--listen` フラグを使用します:
 
 ```bash
-npx @mobilenext/mobile-mcp@latest --listen 3000
+npx @tomosia/device-farm-mcp@latest --listen 3000
 ```
 
 これは `localhost:3000` にバインドします。特定のインターフェースにバインドするには:
 
 ```bash
-npx @mobilenext/mobile-mcp@latest --listen 0.0.0.0:3000
+npx @tomosia/device-farm-mcp@latest --listen 0.0.0.0:3000
 ```
 
 その後、MCP クライアントが `http://<host>:3000/mcp`（TLS 配下なら `https://…/mcp`）に接続するよう設定します。エンドポイントは Streamable HTTP（`/mcp` への `POST`）を受け付けます。リモートモードは **ステートレス** で（セッション親和性不要）、Smithery などの水平スケールするホストとも相性が良いです。
@@ -427,7 +427,7 @@ localhost にバインドする場合、Host ヘッダーによる DNS リバイ
 HTTP サーバーで Bearer トークンによる認可を要求するには、環境変数 `MOBILEMCP_AUTH` を設定します:
 
 ```bash
-MOBILEMCP_AUTH=my-secret-token npx @mobilenext/mobile-mcp@latest --listen 3000
+MOBILEMCP_AUTH=my-secret-token npx @tomosia/device-farm-mcp@latest --listen 3000
 ```
 
 設定すると、すべてのリクエストにヘッダー `Authorization: Bearer my-secret-token` を含める必要があります。未設定の場合は認証なしで受け付け、警告を出力します。
@@ -522,7 +522,7 @@ Mobile Next Mobile MCP を実行する前に、モバイルプラットフォー
 Mobile MCP は PostHog と Scarf を通じて匿名の利用テレメトリを収集します。無効にするには、環境変数 `MOBILEMCP_DISABLE_TELEMETRY` を設定します:
 
 ```bash
-MOBILEMCP_DISABLE_TELEMETRY=1 npx @mobilenext/mobile-mcp@latest
+MOBILEMCP_DISABLE_TELEMETRY=1 npx @tomosia/device-farm-mcp@latest
 ```
 
 json 設定の場合:
@@ -530,9 +530,9 @@ json 設定の場合:
 ```json
 {
   "mcpServers": {
-    "mobile-mcp": {
+    "device-farm-mcp": {
       "command": "npx",
-      "args": ["-y", "@mobilenext/mobile-mcp@latest"],
+      "args": ["-y", "@tomosia/device-farm-mcp@latest"],
       "env": {
         "MOBILEMCP_DISABLE_TELEMETRY": "1"
       }

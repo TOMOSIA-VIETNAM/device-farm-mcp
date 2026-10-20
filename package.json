@@ -1,11 +1,11 @@
 {
-  "name": "@mobilenext/mobile-mcp",
-  "mcpName": "io.github.mobile-next/mobile-mcp",
+  "name": "@tomosia/device-farm-mcp",
+  "mcpName": "io.github.TOMOSIA-VIETNAM/device-farm-mcp",
   "version": "0.0.1",
-  "description": "Mobile MCP",
+  "description": "MCP server for iOS and Android automation on local devices and AWS Device Farm",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mobile-next/mobile-mcp.git"
+    "url": "git+https://github.com/TOMOSIA-VIETNAM/device-farm-mcp.git"
   },
   "engines": {
     "node": ">=20"
@@ -25,6 +25,7 @@
     "lib"
   ],
   "dependencies": {
+    "@aws-sdk/client-device-farm": "3.1153.0",
     "@modelcontextprotocol/express": "2.0.0",
     "@modelcontextprotocol/node": "2.0.0",
     "@modelcontextprotocol/server": "2.0.0",
@@ -59,14 +60,14 @@
   },
   "main": "index.js",
   "bin": {
-    "mcp-server-mobile": "lib/index.js"
+    "device-farm-mcp": "lib/index.js"
   },
   "directories": {
     "lib": "lib"
   },
   "author": "",
   "bugs": {
-    "url": "https://github.com/mobile-next/mobile-mcp/issues"
+    "url": "https://github.com/TOMOSIA-VIETNAM/device-farm-mcp/issues"
   },
-  "homepage": "https://github.com/mobile-next/mobile-mcp#readme"
+  "homepage": "https://github.com/TOMOSIA-VIETNAM/device-farm-mcp#readme"
 }
