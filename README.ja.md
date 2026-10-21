@@ -187,7 +187,7 @@ claude mcp add device-farm-mcp \
 
 ```
 /plugin marketplace add TOMOSIA-VIETNAM/device-farm-mcp
-/plugin install mobile-mcp@mobile-mcp
+/plugin install device-farm-mcp@device-farm-mcp
 ```
 
 プラグインは `DEVICEFARM_PROJECT_ARN` なしでサーバーを起動するため、リモートデバイスを使う場合は Claude Code を起動する環境でこの変数（および必要な AWS 変数）を設定してください。
@@ -418,13 +418,13 @@ npx @tomosia/device-farm-mcp@latest --listen 0.0.0.0:3000  # すべてのイン�
 
 クライアントは `http://<host>:3000/mcp` に接続します。エンドポイントはステートレスなので、セッションアフィニティなしでロードバランサーの背後で動作します。localhost にバインドした場合、Host ヘッダーによる DNS リバインディング保護が自動で有効になります。
 
-サーバーは実行しているホストの AWS 認証情報を使うため、サーバーに到達できる人は誰でもそのアカウントで Device Farm のデバイスを確保できます。localhost 以外に公開する場合は、`MOBILEMCP_AUTH` で Bearer トークンを必須にしてください。
+サーバーは実行しているホストの AWS 認証情報を使うため、サーバーに到達できる人は誰でもそのアカウントで Device Farm のデバイスを確保できます。localhost 以外に公開する場合は、`DEVICE_FARM_MCP_AUTH` で Bearer トークンを必須にしてください。
 
 ```bash
-MOBILEMCP_AUTH=my-secret-token npx @tomosia/device-farm-mcp@latest --listen 0.0.0.0:3000
+DEVICE_FARM_MCP_AUTH=my-secret-token npx @tomosia/device-farm-mcp@latest --listen 0.0.0.0:3000
 ```
 
-設定すると、すべてのリクエストに `Authorization: Bearer my-secret-token` ヘッダーが必要になります。`MOBILEMCP_AUTH` を設定しない場合、サーバーは認証なしの接続を受け付け、警告をログに出力します。
+設定すると、すべてのリクエストに `Authorization: Bearer my-secret-token` ヘッダーが必要になります。`DEVICE_FARM_MCP_AUTH` を設定しない場合、サーバーは認証なしの接続を受け付け、警告をログに出力します。
 
 ## 環境変数
 
@@ -432,10 +432,10 @@ MOBILEMCP_AUTH=my-secret-token npx @tomosia/device-farm-mcp@latest --listen 0.0.
 |---|---|---|
 | `DEVICEFARM_PROJECT_ARN` | リモートアクセスセッションとアプリのアップロードに使う AWS Device Farm プロジェクト。 | `arn:aws:devicefarm:us-west-2:111122223333:project:abcd-1234` |
 | `AWS_PROFILE`、`AWS_ACCESS_KEY_ID`、`AWS_SECRET_ACCESS_KEY`、`AWS_SESSION_TOKEN` | AWS SDK 標準の認証情報。デフォルトの認証情報チェーンの他の方法も使えます。 | `AWS_PROFILE=devicefarm` |
-| `MOBILEMCP_AUTH` | Streamable HTTP サーバー（`--listen`）で Bearer トークンを必須にします。 | `my-secret-token` |
-| `MOBILEMCP_DISABLE_TELEMETRY` | 匿名の利用状況テレメトリ（PostHog と Scarf）を無効にします。 | `1` |
-| `MOBILEMCP_ALLOW_UNSAFE_URLS` | `mobile_open_url` で標準以外の URL スキームを開けるようにします（デフォルトではブロック）。 | `1` |
-| `MOBILEMCP_LEGACY_ROBOT` | ローカルの Android デバイスと iOS 実機で、従来のプラットフォーム別ロボットを使います。iOS シミュレーターは引き続き `mobilecli` を使います。 | `1` |
+| `DEVICE_FARM_MCP_AUTH` | Streamable HTTP サーバー（`--listen`）で Bearer トークンを必須にします。 | `my-secret-token` |
+| `DEVICE_FARM_MCP_DISABLE_TELEMETRY` | 匿名の利用状況テレメトリ（PostHog と Scarf）を無効にします。 | `1` |
+| `DEVICE_FARM_MCP_ALLOW_UNSAFE_URLS` | `mobile_open_url` で標準以外の URL スキームを開けるようにします（デフォルトではブロック）。 | `1` |
+| `DEVICE_FARM_MCP_LEGACY_ROBOT` | ローカルの Android デバイスと iOS 実機で、従来のプラットフォーム別ロボットを使います。iOS シミュレーターは引き続き `mobilecli` を使います。 | `1` |
 
 ## プロンプト例
 
@@ -469,4 +469,4 @@ Device Farm MCP は、[Mobile Next](https://github.com/mobile-next) による [m
 
 ## プライバシー
 
-サーバーは手元のマシン（HTTP モードの場合はそのホスト）で動作します。ローカルデバイスと通信し、リモートデバイスについてはあなたの認証情報で AWS Device Farm と通信します。リモートデバイスにインストールするアプリは、あなたの Device Farm プロジェクトにアップロードされます。`MOBILEMCP_DISABLE_TELEMETRY=1` を設定しない限り、匿名の利用状況テレメトリが送信されます。詳しくは Mobile Next のプライバシーポリシー https://mobilenext.ai/privacy を参照してください。
+サーバーは手元のマシン（HTTP モードの場合はそのホスト）で動作します。ローカルデバイスと通信し、リモートデバイスについてはあなたの認証情報で AWS Device Farm と通信します。リモートデバイスにインストールするアプリは、あなたの Device Farm プロジェクトにアップロードされます。`DEVICE_FARM_MCP_DISABLE_TELEMETRY=1` を設定しない限り、匿名の利用状況テレメトリが送信されます。詳しくは Mobile Next のプライバシーポリシー https://mobilenext.ai/privacy を参照してください。

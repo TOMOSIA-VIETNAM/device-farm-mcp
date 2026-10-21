@@ -40,8 +40,8 @@ const expectedAnnotations: ToolAnnotationMatrix = {
 };
 
 test("describes every tool's side effects and interaction domain", async () => {
-	const previousTelemetrySetting = process.env.MOBILEMCP_DISABLE_TELEMETRY;
-	process.env.MOBILEMCP_DISABLE_TELEMETRY = "1";
+	const previousTelemetrySetting = process.env.DEVICE_FARM_MCP_DISABLE_TELEMETRY;
+	process.env.DEVICE_FARM_MCP_DISABLE_TELEMETRY = "1";
 
 	try {
 		const server = createMcpServer();
@@ -62,9 +62,9 @@ test("describes every tool's side effects and interaction domain", async () => {
 		}
 	} finally {
 		if (previousTelemetrySetting === undefined) {
-			delete process.env.MOBILEMCP_DISABLE_TELEMETRY;
+			delete process.env.DEVICE_FARM_MCP_DISABLE_TELEMETRY;
 		} else {
-			process.env.MOBILEMCP_DISABLE_TELEMETRY = previousTelemetrySetting;
+			process.env.DEVICE_FARM_MCP_DISABLE_TELEMETRY = previousTelemetrySetting;
 		}
 	}
 });

@@ -1,4 +1,4 @@
-# Contributing to Mobile MCP
+# Contributing to Device Farm MCP
 
 Thanks for your interest in contributing! This document covers the basics for getting set up and submitting changes.
 
@@ -8,9 +8,9 @@ This project adheres to the [Contributor Covenant](CODE_OF_CONDUCT.md). By parti
 
 ## Reporting bugs and requesting features
 
-- Search [existing issues](https://github.com/mobile-next/mobile-mcp/issues) before opening a new one.
+- Search [existing issues](https://github.com/TOMOSIA-VIETNAM/device-farm-mcp/issues) before opening a new one.
 - Open one issue per bug or feature request.
-- For bugs, include: mobile-mcp version, OS, target platform (iOS/Android), device/simulator/emulator, a minimal reproduction, and the actual vs. expected behavior.
+- For bugs, include: device-farm-mcp version, OS, target platform (iOS/Android), device/simulator/emulator, a minimal reproduction, and the actual vs. expected behavior.
 - For larger feature proposals, please open an issue to discuss the design before sending a PR.
 
 ## Reporting security issues
@@ -22,8 +22,8 @@ Please **do not** file public GitHub issues for security vulnerabilities — see
 Requirements: Node.js 22+, and Xcode command line tools / Android Platform Tools if you plan to exercise a simulator, emulator, or real device.
 
 ```bash
-git clone https://github.com/mobile-next/mobile-mcp.git
-cd mobile-mcp
+git clone https://github.com/TOMOSIA-VIETNAM/device-farm-mcp.git
+cd device-farm-mcp
 npm ci
 npm run build
 

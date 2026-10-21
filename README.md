@@ -187,7 +187,7 @@ Or install the plugin from inside Claude Code. It adds the MCP server and `/mobi
 
 ```
 /plugin marketplace add TOMOSIA-VIETNAM/device-farm-mcp
-/plugin install mobile-mcp@mobile-mcp
+/plugin install device-farm-mcp@device-farm-mcp
 ```
 
 The plugin starts the server without `DEVICEFARM_PROJECT_ARN`, so for remote devices set it (and any AWS variables) in the environment Claude Code is launched from.
@@ -418,13 +418,13 @@ npx @tomosia/device-farm-mcp@latest --listen 0.0.0.0:3000  # binds to all interf
 
 Clients connect to `http://<host>:3000/mcp`. The endpoint is stateless, so it works behind load balancers without session affinity. When bound to localhost, Host-header DNS rebinding protection is enabled automatically.
 
-The server uses the AWS credentials of the host it runs on, so everyone who can reach it can allocate Device Farm devices on that account. Require a Bearer token with `MOBILEMCP_AUTH` when exposing it beyond localhost:
+The server uses the AWS credentials of the host it runs on, so everyone who can reach it can allocate Device Farm devices on that account. Require a Bearer token with `DEVICE_FARM_MCP_AUTH` when exposing it beyond localhost:
 
 ```bash
-MOBILEMCP_AUTH=my-secret-token npx @tomosia/device-farm-mcp@latest --listen 0.0.0.0:3000
+DEVICE_FARM_MCP_AUTH=my-secret-token npx @tomosia/device-farm-mcp@latest --listen 0.0.0.0:3000
 ```
 
-Every request must then send `Authorization: Bearer my-secret-token`. Without `MOBILEMCP_AUTH` the server accepts unauthenticated connections and logs a warning.
+Every request must then send `Authorization: Bearer my-secret-token`. Without `DEVICE_FARM_MCP_AUTH` the server accepts unauthenticated connections and logs a warning.
 
 ## Environment variables
 
@@ -432,10 +432,10 @@ Every request must then send `Authorization: Bearer my-secret-token`. Without `M
 |---|---|---|
 | `DEVICEFARM_PROJECT_ARN` | AWS Device Farm project used for remote access sessions and app uploads. | `arn:aws:devicefarm:us-west-2:111122223333:project:abcd-1234` |
 | `AWS_PROFILE`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` | Standard AWS SDK credentials. Any other method of the default credential chain also works. | `AWS_PROFILE=devicefarm` |
-| `MOBILEMCP_AUTH` | Require a Bearer token on the Streamable HTTP server (`--listen`). | `my-secret-token` |
-| `MOBILEMCP_DISABLE_TELEMETRY` | Disable anonymous usage telemetry (PostHog and Scarf). | `1` |
-| `MOBILEMCP_ALLOW_UNSAFE_URLS` | Allow `mobile_open_url` to open non-standard URL schemes (blocked by default). | `1` |
-| `MOBILEMCP_LEGACY_ROBOT` | Use the legacy platform-specific robots for local Android devices and physical iOS devices. iOS simulators still use `mobilecli`. | `1` |
+| `DEVICE_FARM_MCP_AUTH` | Require a Bearer token on the Streamable HTTP server (`--listen`). | `my-secret-token` |
+| `DEVICE_FARM_MCP_DISABLE_TELEMETRY` | Disable anonymous usage telemetry (PostHog and Scarf). | `1` |
+| `DEVICE_FARM_MCP_ALLOW_UNSAFE_URLS` | Allow `mobile_open_url` to open non-standard URL schemes (blocked by default). | `1` |
+| `DEVICE_FARM_MCP_LEGACY_ROBOT` | Use the legacy platform-specific robots for local Android devices and physical iOS devices. iOS simulators still use `mobilecli`. | `1` |
 
 ## Example prompts
 
@@ -470,4 +470,4 @@ Device Farm MCP builds on [mobile-mcp](https://github.com/mobile-next/mobile-mcp
 
 ## Privacy
 
-The server runs on your machine (or your host in HTTP mode). It talks to your local devices and, for remote devices, to AWS Device Farm with your credentials. Apps you install on a remote device are uploaded to your Device Farm project. Anonymous usage telemetry is sent unless `MOBILEMCP_DISABLE_TELEMETRY=1` is set; see the Mobile Next privacy policy at https://mobilenext.ai/privacy.
+The server runs on your machine (or your host in HTTP mode). It talks to your local devices and, for remote devices, to AWS Device Farm with your credentials. Apps you install on a remote device are uploaded to your Device Farm project. Anonymous usage telemetry is sent unless `DEVICE_FARM_MCP_DISABLE_TELEMETRY=1` is set; see the Mobile Next privacy policy at https://mobilenext.ai/privacy.

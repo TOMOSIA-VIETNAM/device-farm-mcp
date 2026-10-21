@@ -70,7 +70,7 @@ export class IosRobot implements Robot {
 	private async assertTunnelRunning(): Promise<void> {
 		if (await this.isTunnelRequired()) {
 			if (!(await this.isTunnelRunning())) {
-				throw new ActionableError("iOS tunnel is not running, please see https://github.com/mobile-next/mobile-mcp/wiki/");
+				throw new ActionableError("iOS tunnel is not running, please see https://github.com/TOMOSIA-VIETNAM/device-farm-mcp#readme");
 			}
 		}
 	}
@@ -80,13 +80,13 @@ export class IosRobot implements Robot {
 		await this.assertTunnelRunning();
 
 		if (!(await this.isWdaForwardRunning())) {
-			throw new ActionableError("Port forwarding to WebDriverAgent is not running (tunnel okay), please see https://github.com/mobile-next/mobile-mcp/wiki/");
+			throw new ActionableError("Port forwarding to WebDriverAgent is not running (tunnel okay), please see https://github.com/TOMOSIA-VIETNAM/device-farm-mcp#readme");
 		}
 
 		const wda = new WebDriverAgent("localhost", WDA_PORT);
 
 		if (!(await wda.isRunning())) {
-			throw new ActionableError("WebDriverAgent is not running on device (tunnel okay, port forwarding okay), please see https://github.com/mobile-next/mobile-mcp/wiki/");
+			throw new ActionableError("WebDriverAgent is not running on device (tunnel okay, port forwarding okay), please see https://github.com/TOMOSIA-VIETNAM/device-farm-mcp#readme");
 		}
 
 		return wda;

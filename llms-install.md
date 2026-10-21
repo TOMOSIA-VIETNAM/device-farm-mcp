@@ -1,11 +1,11 @@
-# Mobile MCP — Automated Installation Guide
+# Device Farm MCP — Automated Installation Guide
 
 This file is written for AI coding agents (Cline, Cursor, Claude Code, etc.) to install and
-configure the Mobile MCP server automatically. Follow the steps in order.
+configure the Device Farm MCP server automatically. Follow the steps in order.
 
 ## What this server does
 
-Mobile MCP lets an agent drive real iOS and Android devices, simulators, and emulators through
+Device Farm MCP lets an agent drive real iOS and Android devices, simulators, and emulators through
 one interface: taps, swipes, gestures, app install/launch/terminate, screenshots, structured UI
 element extraction, screen recording, and crash reports.
 
@@ -46,5 +46,5 @@ emulator is running, or that a device is connected and authorized.
 
 - **iOS real devices** need extra setup (go-ios + WebDriverAgent + a device tunnel). Simulators and
   Android need no extra setup beyond the prerequisites above. See the
-  [README](https://github.com/mobile-next/mobile-mcp) and
-  [wiki](https://github.com/mobile-next/mobile-mcp/wiki) for details.
+  [README](https://github.com/TOMOSIA-VIETNAM/device-farm-mcp) and
+  [wiki](https://github.com/TOMOSIA-VIETNAM/device-farm-mcp#readme) for details.

@@ -113,7 +113,7 @@ export class Mobilecli {
 
 		const nodeModulesRoots: string[] = [];
 
-		// Check if mobile-mcp is installed as a package
+		// Check if device-farm-mcp is installed as a package
 		const currentPath = __filename;
 		const pathParts = currentPath.split(sep);
 		const lastNodeModulesIndex = pathParts.lastIndexOf("node_modules");

@@ -3,14 +3,14 @@ import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { createMcpServer } from "../src/server";
 
 const listToolNamesWithTelemetry = async (isTelemetryEnabled: boolean): Promise<string[]> => {
-	const previousTelemetrySetting = process.env.MOBILEMCP_DISABLE_TELEMETRY;
+	const previousTelemetrySetting = process.env.DEVICE_FARM_MCP_DISABLE_TELEMETRY;
 	const previousFetch = globalThis.fetch;
 	// never reach posthog from tests
 	globalThis.fetch = async () => new Response();
 	if (isTelemetryEnabled) {
-		delete process.env.MOBILEMCP_DISABLE_TELEMETRY;
+		delete process.env.DEVICE_FARM_MCP_DISABLE_TELEMETRY;
 	} else {
-		process.env.MOBILEMCP_DISABLE_TELEMETRY = "1";
+		process.env.DEVICE_FARM_MCP_DISABLE_TELEMETRY = "1";
 	}
 
 	try {
@@ -29,9 +29,9 @@ const listToolNamesWithTelemetry = async (isTelemetryEnabled: boolean): Promise<
 	} finally {
 		globalThis.fetch = previousFetch;
 		if (previousTelemetrySetting === undefined) {
-			delete process.env.MOBILEMCP_DISABLE_TELEMETRY;
+			delete process.env.DEVICE_FARM_MCP_DISABLE_TELEMETRY;
 		} else {
-			process.env.MOBILEMCP_DISABLE_TELEMETRY = previousTelemetrySetting;
+			process.env.DEVICE_FARM_MCP_DISABLE_TELEMETRY = previousTelemetrySetting;
 		}
 	}
 };

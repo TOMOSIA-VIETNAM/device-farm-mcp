@@ -1,13 +1,13 @@
 {
-	"name": "mobile-mcp",
+	"name": "device-farm-mcp",
 	"description": "Mobile automation for AI agents on Android and iOS",
 	"owner": {
-		"name": "Mobile Next",
-		"url": "https://mobilenext.ai"
+		"name": "TOMOSIA VIETNAM",
+		"url": "https://github.com/TOMOSIA-VIETNAM"
 	},
 	"plugins": [
 		{
-			"name": "mobile-mcp",
+			"name": "device-farm-mcp",
 			"source": "./plugin"
 		}
 	]

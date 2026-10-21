@@ -1,6 +1,6 @@
 # Roadmap
 
-This is a living document of planned and in-progress features. Items are roughly prioritized top-to-bottom. Have a feature request? [Open an issue](https://github.com/mobile-next/mobile-mcp/issues/new/choose).
+This is a living document of planned and in-progress features. Items are roughly prioritized top-to-bottom. Have a feature request? [Open an issue](https://github.com/TOMOSIA-VIETNAM/device-farm-mcp/issues/new/choose).
 
 | Feature | Description | Status |
 |---|---|---|
@@ -29,7 +29,7 @@ Shipped in 2026, most recent first.
 | **Remove go-ios dependency** | Dropped the external `go-ios` dependency entirely. | 2026-09-04 |
 | **iOS Device Kit on Simulator** | Replaced WebDriverAgent with our own Device Kit for iOS Simulator automation. | 2026-05-01 |
 | **List crashes** | Retrieve crash reports from the device. | 2026-05-01 |
-| **SSE authentication** | Optional Bearer-token auth for the SSE server (`--listen` + `MOBILEMCP_AUTH`). | 2026-04-03 |
+| **SSE authentication** | Optional Bearer-token auth for the SSE server (`--listen` + `DEVICE_FARM_MCP_AUTH`). | 2026-04-03 |
 | **Safe URL schemes** | Restrict `open url` to safe schemes unless explicitly enabled. | 2026-03-27 |
 | **Screen recording** | Record the device screen to an mp4 file. | 2026-03-03 |
 | **App launch locales** | Launch apps with a specific locale. | 2026-03-03 |

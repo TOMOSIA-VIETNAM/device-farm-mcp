@@ -8,7 +8,7 @@ metadata:
         - npx
 ---
 
-# Mobile Automation with Mobile MCP
+# Mobile Automation with Device Farm MCP
 
 Tools for driving real phones, emulators and simulators. All tools are
 prefixed `mobile_`.
@@ -45,4 +45,4 @@ prefixed `mobile_`.
 - Real devices in the cloud (no local hardware): `mobile_login_to_cloud_provider`,
   then `mobile_list_remote_devices` / `mobile_allocate_remote_device`, and
   release with `mobile_release_remote_device` when done. See
-  https://mobilenext.ai/docs for details.
+  https://github.com/TOMOSIA-VIETNAM/device-farm-mcp#readme for details.

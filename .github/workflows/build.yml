@@ -108,14 +108,14 @@ jobs:
       run: |
         # npm takes a while to serve a freshly published version; give up after 10 minutes
         for attempt in $(seq 1 120); do
-          if npm view "@mobilenext/mobile-mcp@$VERSION" version >/dev/null 2>&1; then
-            echo "@mobilenext/mobile-mcp@$VERSION is available on npm"
+          if npm view "@tomosia/device-farm-mcp@$VERSION" version >/dev/null 2>&1; then
+            echo "@tomosia/device-farm-mcp@$VERSION is available on npm"
             exit 0
           fi
-          echo "Waiting for @mobilenext/mobile-mcp@$VERSION on npm (attempt $attempt/120)"
+          echo "Waiting for @tomosia/device-farm-mcp@$VERSION on npm (attempt $attempt/120)"
           sleep 5
         done
-        echo "@mobilenext/mobile-mcp@$VERSION did not appear on npm in time"
+        echo "@tomosia/device-farm-mcp@$VERSION did not appear on npm in time"
         exit 1
 
     - name: Publish on github mcp registry
@@ -169,14 +169,14 @@ jobs:
         # sharp wasm fallback push the bundle past Smithery's 25MB cap
         rm -f node_modules/mobilecli/bin/*windows* node_modules/mobilecli/bin/*linux* node_modules/mobilecli/bin/mobilecli-darwin-amd64
         rm -rf node_modules/@img/sharp-wasm32
-        npx -y @anthropic-ai/mcpb pack . /tmp/mobile-mcp.mcpb
-        ls -lh /tmp/mobile-mcp.mcpb
+        npx -y @anthropic-ai/mcpb pack . /tmp/device-farm-mcp.mcpb
+        ls -lh /tmp/device-farm-mcp.mcpb
 
     - name: Publish to Smithery
       env:
         SMITHERY_API_KEY: ${{ secrets.SMITHERY_API_KEY }}
       run: |
-        npx -y @smithery/cli mcp publish /tmp/mobile-mcp.mcpb -n mobile-next/mobile-mcp
+        npx -y @smithery/cli mcp publish /tmp/device-farm-mcp.mcpb -n TOMOSIA-VIETNAM/device-farm-mcp
 
   e2e_test:
     runs-on: self-hosted
@@ -194,10 +194,10 @@ jobs:
     - name: Build
       run: npm run build
 
-    - name: Configure mobile-mcp MCP server
+    - name: Configure device-farm-mcp MCP server
       run: |
-        claude mcp remove mobile-mcp --scope local || true
-        claude mcp add mobile-mcp --scope local -- node "$(pwd)/lib/index.js"
+        claude mcp remove device-farm-mcp --scope local || true
+        claude mcp add device-farm-mcp --scope local -- node "$(pwd)/lib/index.js"
 
     - name: Run Android emulator test prompt
       run: |

@@ -3,7 +3,7 @@ import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { createMcpServer } from "../src/server";
 
 const createConnectedClient = async () => {
-	process.env.MOBILEMCP_DISABLE_TELEMETRY = "1";
+	process.env.DEVICE_FARM_MCP_DISABLE_TELEMETRY = "1";
 	const server = createMcpServer();
 	const client = new Client({ name: "errors-test", version: "1.0.0" });
 	const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();

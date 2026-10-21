@@ -19,7 +19,7 @@ import { ActionableError } from "./robot";
 
 // device farm only runs in us-west-2
 const REGION = "us-west-2";
-const SESSION_NAME = "mobile-mcp";
+const SESSION_NAME = "device-farm-mcp";
 const DEFAULT_ALLOCATE_TIMEOUT_SECONDS = 900;
 const UPLOAD_TIMEOUT_MS = 10 * 60 * 1000;
 const POLL_INTERVAL_MS = 5000;

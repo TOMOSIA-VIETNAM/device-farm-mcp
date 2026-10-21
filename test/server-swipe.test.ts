@@ -6,7 +6,7 @@ import { createMcpServer } from "../src/server";
 const MISSING_DEVICE = "no-such-device";
 
 const createConnectedClient = async (): Promise<Client> => {
-	process.env.MOBILEMCP_DISABLE_TELEMETRY = "1";
+	process.env.DEVICE_FARM_MCP_DISABLE_TELEMETRY = "1";
 	const server = createMcpServer();
 	const client = new Client({ name: "swipe-test", version: "1.0.0" });
 	const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();

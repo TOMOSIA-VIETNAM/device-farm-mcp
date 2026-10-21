@@ -178,7 +178,7 @@ export function writeOutputFile(filePath: string, data: string | Buffer): void {
 // a fresh 0700 directory nobody else can plant a symlink in, for files written
 // by mobilecli rather than by us
 export function createPrivateOutputPath(filename: string): string {
-	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mobile-mcp-"));
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "device-farm-mcp-"));
 	return path.join(dir, filename);
 }
 

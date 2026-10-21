@@ -47,10 +47,10 @@ function waitForListen(child, timeoutMs = 15000) {
 
 async function main() {
 	const port = await freePort();
-	const auth = process.env.MOBILEMCP_AUTH_VERIFY || "verify-token";
+	const auth = process.env.DEVICE_FARM_MCP_AUTH_VERIFY || "verify-token";
 	const child = spawn(process.execPath, [serverEntry, "--listen", `127.0.0.1:${port}`], {
 		cwd: root,
-		env: { ...process.env, MOBILEMCP_AUTH: auth, MOBILEMCP_DISABLE_TELEMETRY: "1" },
+		env: { ...process.env, DEVICE_FARM_MCP_AUTH: auth, DEVICE_FARM_MCP_DISABLE_TELEMETRY: "1" },
 		stdio: ["ignore", "pipe", "pipe"],
 	});
 

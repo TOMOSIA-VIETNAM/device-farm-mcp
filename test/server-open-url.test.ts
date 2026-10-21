@@ -8,8 +8,8 @@ const MISSING_DEVICE = "no-such-device";
 const SCHEME_REJECTION = "Only http:// and https:// URLs are allowed";
 
 const createConnectedClient = async (): Promise<Client> => {
-	process.env.MOBILEMCP_DISABLE_TELEMETRY = "1";
-	delete process.env.MOBILEMCP_ALLOW_UNSAFE_URLS;
+	process.env.DEVICE_FARM_MCP_DISABLE_TELEMETRY = "1";
+	delete process.env.DEVICE_FARM_MCP_ALLOW_UNSAFE_URLS;
 	const server = createMcpServer();
 	const client = new Client({ name: "open-url-test", version: "1.0.0" });
 	const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();

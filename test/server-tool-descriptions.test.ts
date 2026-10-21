@@ -18,7 +18,7 @@ interface ToolDefinition {
 const TOOLS_THAT_CANNOT_RUN_IN_A_BATCH = ["mobile_batch_commands", "mobile_take_screenshot"];
 
 const listToolDefinitions = async (): Promise<ToolDefinition[]> => {
-	process.env.MOBILEMCP_DISABLE_TELEMETRY = "1";
+	process.env.DEVICE_FARM_MCP_DISABLE_TELEMETRY = "1";
 	const server = createMcpServer();
 	const client = new Client({ name: "tool-descriptions-test", version: "1.0.0" });
 	const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -100,7 +100,7 @@ test("says mobile_open_url only opens http and https urls by default", async () 
 	const openUrl = findTool(tools, "mobile_open_url");
 
 	expect(openUrl.description).toContain("http:// or https://");
-	expect(openUrl.description).toContain("MOBILEMCP_ALLOW_UNSAFE_URLS=1");
+	expect(openUrl.description).toContain("DEVICE_FARM_MCP_ALLOW_UNSAFE_URLS=1");
 });
 
 // the buttons mobilecli accepts: AndroidDevice.PressButton and DeviceKitClient.PressButton

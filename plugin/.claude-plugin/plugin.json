@@ -1,17 +1,17 @@
 {
-	"name": "mobile-mcp",
+	"name": "device-farm-mcp",
 	"version": "1.0.7",
-	"description": "Mobile automation for Claude Code: the mobile-mcp server, and /mobile-mirror, a live, clickable device screen in a pane.",
+	"description": "Mobile automation for Claude Code: the device-farm-mcp server, and /mobile-mirror, a live, clickable device screen in a pane.",
 	"author": {
-		"name": "Mobile Next",
-		"url": "https://mobilenext.ai"
+		"name": "TOMOSIA VIETNAM",
+		"url": "https://github.com/TOMOSIA-VIETNAM"
 	},
-	"homepage": "https://mobilenext.ai/docs",
-	"repository": "https://github.com/mobile-next/mobile-mcp",
+	"homepage": "https://github.com/TOMOSIA-VIETNAM/device-farm-mcp#readme",
+	"repository": "https://github.com/TOMOSIA-VIETNAM/device-farm-mcp",
 	"license": "Apache-2.0",
 	"keywords": ["mobile", "android", "ios", "automation", "testing", "mcp", "mirror"],
 	"mcpServers": {
-		"mobile-mcp": {
+		"device-farm-mcp": {
 			"type": "stdio",
 			"command": "npx",
 			"args": ["-y", "@tomosia/device-farm-mcp@latest"]

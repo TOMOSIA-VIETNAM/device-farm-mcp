@@ -1,14 +1,14 @@
 {
 	"manifest_version": "0.3",
-	"name": "mobile-mcp",
-	"display_name": "Mobile MCP",
+	"name": "device-farm-mcp",
+	"display_name": "Device Farm MCP",
 	"version": "1.0.2",
 	"description": "Mobile automation for AI agents: control Android and iOS devices, emulators and simulators — launch apps, tap, swipe, type, take screenshots, read the accessibility tree.",
 	"author": {
-		"name": "Mobile Next",
-		"url": "https://mobilenext.ai"
+		"name": "TOMOSIA VIETNAM",
+		"url": "https://github.com/TOMOSIA-VIETNAM"
 	},
-	"homepage": "https://mobilenext.ai/docs",
+	"homepage": "https://github.com/TOMOSIA-VIETNAM/device-farm-mcp#readme",
 	"license": "Apache-2.0",
 	"icon": "icon.png",
 	"keywords": ["mobile", "android", "ios", "automation", "testing"],

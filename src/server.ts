@@ -101,13 +101,13 @@ mobile_batch_commands instead of issuing them one at a time.
 
 Prefer mobile_launch_app to open an app, and mobile_open_url to open a web page,
 over navigating through the UI. mobile_open_url only accepts http:// and
-https:// URLs unless the server was started with MOBILEMCP_ALLOW_UNSAFE_URLS=1,
+https:// URLs unless the server was started with DEVICE_FARM_MCP_ALLOW_UNSAFE_URLS=1,
 so do not rely on it for app deep links.`;
 
 export const createMcpServer = (): McpServer => {
 
 	const server = new McpServer({
-		name: "mobile-mcp",
+		name: "device-farm-mcp",
 		version: getAgentVersion(),
 	}, {
 		instructions: SERVER_INSTRUCTIONS,
@@ -177,7 +177,7 @@ export const createMcpServer = (): McpServer => {
 	};
 
 	const posthog = async (event: string, properties: Record<string, string | number>) => {
-		if (process.env.MOBILEMCP_DISABLE_TELEMETRY) {
+		if (process.env.DEVICE_FARM_MCP_DISABLE_TELEMETRY) {
 			return;
 		}
 
@@ -188,11 +188,11 @@ export const createMcpServer = (): McpServer => {
 			const distinct_id = crypto.createHash("sha256").update(name).digest("hex");
 			const systemProps: any = {
 				Platform: os.platform(),
-				Product: "mobile-mcp",
+				Product: "device-farm-mcp",
 				Version: getAgentVersion(),
 				NodeVersion: process.version,
 				CI: process.env.CI || "0",
-				RobotMode: process.env.MOBILEMCP_LEGACY_ROBOT === "1" ? "legacy" : "mobilecli",
+				RobotMode: process.env.DEVICE_FARM_MCP_LEGACY_ROBOT === "1" ? "legacy" : "mobilecli",
 			};
 
 			const clientName = getClientName();
@@ -223,7 +223,7 @@ export const createMcpServer = (): McpServer => {
 	// ponytail: scarf.sh pixel, fired once per process on first tool invocation
 	let scarfSent = false;
 	const scarf = () => {
-		if (scarfSent || process.env.MOBILEMCP_DISABLE_TELEMETRY) {
+		if (scarfSent || process.env.DEVICE_FARM_MCP_DISABLE_TELEMETRY) {
 			return;
 		}
 
@@ -244,7 +244,7 @@ export const createMcpServer = (): McpServer => {
 				throw new Error("mobilecli version check failed");
 			}
 		} catch (error: any) {
-			throw new ActionableError(`mobilecli is not available or not working properly. Please review the documentation at https://github.com/mobile-next/mobile-mcp/wiki for installation instructions`);
+			throw new ActionableError(`mobilecli is not available or not working properly. Please review the documentation at https://github.com/TOMOSIA-VIETNAM/device-farm-mcp#readme for installation instructions`);
 		}
 	};
 
@@ -271,7 +271,7 @@ export const createMcpServer = (): McpServer => {
 		// from now on, we must have mobilecli working
 		ensureMobilecliAvailable();
 
-		const legacyRobot = process.env.MOBILEMCP_LEGACY_ROBOT === "1";
+		const legacyRobot = process.env.DEVICE_FARM_MCP_LEGACY_ROBOT === "1";
 		if (legacyRobot) {
 			// Check if it's an iOS device
 			const iosManager = new IosManager();
@@ -320,13 +320,13 @@ export const createMcpServer = (): McpServer => {
 
 	// ponytail: same tool as @posthog/mcp's reportMissing, without pulling in the sdk
 	// nothing to report to when telemetry is off, so don't advertise the tool at all
-	if (!process.env.MOBILEMCP_DISABLE_TELEMETRY) {
+	if (!process.env.DEVICE_FARM_MCP_DISABLE_TELEMETRY) {
 		tool(
 			"get_more_tools",
 			"Get More Tools",
 			"Only call this when none of the other tools can do what you need on a mobile device, or for mobile testing or mobile app development. " +
 			"Do not call it for tasks unrelated to mobile, or when another tool already covers the task. " +
-			"The context is sent to the mobile-mcp developers, so never include PII, secrets, credentials or other private information in it.",
+			"The context is sent to Mobile Next, the upstream developers, so never include PII, secrets, credentials or other private information in it.",
 			{
 				context: z.string().describe("A description of your goal and what kind of tool would help accomplish it."),
 			},
@@ -351,7 +351,7 @@ export const createMcpServer = (): McpServer => {
 			ensureMobilecliAvailable();
 
 			const devices: MobilecliDevice[] = [];
-			const legacyRobot = process.env.MOBILEMCP_LEGACY_ROBOT === "1";
+			const legacyRobot = process.env.DEVICE_FARM_MCP_LEGACY_ROBOT === "1";
 
 			if (legacyRobot) {
 				const iosManager = new IosManager();
@@ -733,17 +733,17 @@ export const createMcpServer = (): McpServer => {
 	tool(
 		"mobile_open_url",
 		"Open URL",
-		"Open an http:// or https:// URL in the browser on device. Other URL schemes, such as app deep links, are rejected unless the server was started with MOBILEMCP_ALLOW_UNSAFE_URLS=1.",
+		"Open an http:// or https:// URL in the browser on device. Other URL schemes, such as app deep links, are rejected unless the server was started with DEVICE_FARM_MCP_ALLOW_UNSAFE_URLS=1.",
 		{
 			device: z.string().describe("The device identifier to use. Use mobile_list_available_devices to find which devices are available to you."),
 			url: z.string().describe("The URL to open, starting with http:// or https://"),
 		},
 		{ readOnlyHint: false, destructiveHint: false, openWorldHint: true },
 		async ({ device, url }) => {
-			const allowUnsafeUrls = process.env.MOBILEMCP_ALLOW_UNSAFE_URLS === "1";
+			const allowUnsafeUrls = process.env.DEVICE_FARM_MCP_ALLOW_UNSAFE_URLS === "1";
 			const normalizedUrl = withLowercaseScheme(url);
 			if (!allowUnsafeUrls && !normalizedUrl.startsWith("http://") && !normalizedUrl.startsWith("https://")) {
-				throw new ActionableError("Only http:// and https:// URLs are allowed. Set MOBILEMCP_ALLOW_UNSAFE_URLS=1 to allow other URL schemes.");
+				throw new ActionableError("Only http:// and https:// URLs are allowed. Set DEVICE_FARM_MCP_ALLOW_UNSAFE_URLS=1 to allow other URL schemes.");
 			}
 
 			const robot = getRobotFromDevice(device);

@@ -6,7 +6,7 @@ import { keysToActions } from "./keys";
 import { fitInside, pngSize } from "./png";
 
 // the key of the MCP server in this plugin's manifest
-const MCP_SERVER = "mobile-mcp";
+const MCP_SERVER = "device-farm-mcp";
 const COMMAND = "mobile-mirror";
 const PANE = "mobile-mirror";
 const VIEW_KEY = "view";
@@ -21,11 +21,11 @@ const TOOLBAR_ROWS = 1;
 const URL_FIELD_ROWS = 1;
 
 // kept in session state, not module variables, so they survive a reload of the mod
-const target = atom({ plugin: "mobile-mcp", key: "target" } as const, null as Target | null);
+const target = atom({ plugin: "device-farm-mcp", key: "target" } as const, null as Target | null);
 // bumped to stop the running frame loop: a loop runs only while it holds the current value
-const streamId = atom({ plugin: "mobile-mcp", key: "streamId" } as const, 0);
-const isAskingUrl = atom({ plugin: "mobile-mcp", key: "isAskingUrl" } as const, false);
-const shot = atom({ plugin: "mobile-mcp", key: "shot" } as const, { file: "", generation: 0, width: 1, height: 1 } as Shot);
+const streamId = atom({ plugin: "device-farm-mcp", key: "streamId" } as const, 0);
+const isAskingUrl = atom({ plugin: "device-farm-mcp", key: "isAskingUrl" } as const, false);
+const shot = atom({ plugin: "device-farm-mcp", key: "shot" } as const, { file: "", generation: 0, width: 1, height: 1 } as Shot);
 
 type Device = { id: string; platform: string; state: string };
 type TapMessage = { x: number; y: number };
@@ -44,11 +44,11 @@ function frameFile(generation: number): string {
 	return `/tmp/mobile-mirror-${generation % FRAME_FILES}.png`;
 }
 
-// calls a mobile-mcp tool by the name this session runs the server under, connecting it on first use
-async function callMobileMcp($: EngineInterface, tool: string, args: Record<string, unknown> = {}): Promise<McpResult> {
+// calls a device-farm-mcp tool by the name this session runs the server under, connecting it on first use
+async function callDeviceFarmMcp($: EngineInterface, tool: string, args: Record<string, unknown> = {}): Promise<McpResult> {
 	const connection = await $.mcp.connect(MCP_SERVER);
 	if (!connection.isConnected) {
-		throw new Error(`mobile-mcp is not connected: ${connection.message}`);
+		throw new Error(`device-farm-mcp is not connected: ${connection.message}`);
 	}
 
 	return $.mcp.call(connection.server, tool, args);
@@ -57,7 +57,7 @@ async function callMobileMcp($: EngineInterface, tool: string, args: Record<stri
 // runs a toolbar action, and toasts only when it fails
 async function runAction($: EngineInterface, what: string, tool: string, args: Record<string, unknown>): Promise<void> {
 	try {
-		const result = await callMobileMcp($, tool, args);
+		const result = await callDeviceFarmMcp($, tool, args);
 		if (result.isError) {
 			$.ui.toast(`${what} failed: ${firstText(result.content)}`);
 		}
@@ -88,7 +88,7 @@ export const register: Register = on => {
 
 	on("command.run", { command: COMMAND }, async ($, e) => {
 		const wanted = e.args.trim() || undefined;
-		const listed = await callMobileMcp($, "mobile_list_available_devices");
+		const listed = await callDeviceFarmMcp($, "mobile_list_available_devices");
 		const { devices } = JSON.parse(firstText(listed.content)) as { devices: Device[] };
 		const device = pickDevice(devices, wanted);
 		if (!device) {
@@ -96,7 +96,7 @@ export const register: Register = on => {
 			return { text: `No online device${wanted ? ` "${wanted}"` : ""}. Online: ${online.join(", ") || "none"}` };
 		}
 
-		const sized = await callMobileMcp($, "mobile_get_screen_size", { device: device.id });
+		const sized = await callDeviceFarmMcp($, "mobile_get_screen_size", { device: device.id });
 		const match = /(\d+)x(\d+)/.exec(firstText(sized.content));
 		if (!match) {
 			return { text: `Could not read the screen size of ${device.id}.` };
@@ -113,7 +113,7 @@ export const register: Register = on => {
 
 		const captureFrame = async (generation: number): Promise<boolean> => {
 			const file = frameFile(generation);
-			const saved = await callMobileMcp($, "mobile_save_screenshot", { device: device.id, saveTo: file, maxSize: SHOT_MAX_SIZE });
+			const saved = await callDeviceFarmMcp($, "mobile_save_screenshot", { device: device.id, saveTo: file, maxSize: SHOT_MAX_SIZE });
 			if (saved.isError) {
 				return false;
 			}

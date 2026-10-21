@@ -74,7 +74,7 @@ export class Simctl implements Robot {
 		if (!(await wda.isRunning())) {
 			await this.startWda();
 			if (!(await wda.isRunning())) {
-				throw new ActionableError("WebDriverAgent is not running on simulator, please see https://github.com/mobile-next/mobile-mcp/wiki/");
+				throw new ActionableError("WebDriverAgent is not running on simulator, please see https://github.com/TOMOSIA-VIETNAM/device-farm-mcp#readme");
 			}
 
 			// was successfully started
@@ -173,7 +173,7 @@ export class Simctl implements Robot {
 
 				const appBundle = this.findAppBundle(tempDir);
 				if (!appBundle) {
-					throw new ActionableError("No .app bundle found in the .zip file, please visit wiki at https://github.com/mobile-next/mobile-mcp/wiki for assistance.");
+					throw new ActionableError("No .app bundle found in the .zip file, please visit wiki at https://github.com/TOMOSIA-VIETNAM/device-farm-mcp#readme for assistance.");
 				}
 
 				installPath = appBundle;

@@ -187,7 +187,7 @@ claude mcp add device-farm-mcp \
 
 ```
 /plugin marketplace add TOMOSIA-VIETNAM/device-farm-mcp
-/plugin install mobile-mcp@mobile-mcp
+/plugin install device-farm-mcp@device-farm-mcp
 ```
 
 插件启动服务器时不会传入 `DEVICEFARM_PROJECT_ARN`，因此使用远程设备时，请在启动 Claude Code 的环境中设置该变量（以及所需的 AWS 变量）。
@@ -417,13 +417,13 @@ npx @tomosia/device-farm-mcp@latest --listen 0.0.0.0:3000  # 绑定到所有网�
 
 客户端连接 `http://<host>:3000/mcp`。该端点是无状态的，因此可以在负载均衡器后面运行，无需会话亲和性。绑定到 localhost 时，会自动启用基于 Host 头的 DNS 重绑定防护。
 
-服务器使用所在主机的 AWS 凭证，因此任何能访问服务器的人都可以用该账号预留 Device Farm 设备。在 localhost 之外公开时，请通过 `MOBILEMCP_AUTH` 要求 Bearer 令牌：
+服务器使用所在主机的 AWS 凭证，因此任何能访问服务器的人都可以用该账号预留 Device Farm 设备。在 localhost 之外公开时，请通过 `DEVICE_FARM_MCP_AUTH` 要求 Bearer 令牌：
 
 ```bash
-MOBILEMCP_AUTH=my-secret-token npx @tomosia/device-farm-mcp@latest --listen 0.0.0.0:3000
+DEVICE_FARM_MCP_AUTH=my-secret-token npx @tomosia/device-farm-mcp@latest --listen 0.0.0.0:3000
 ```
 
-设置后，所有请求都必须带上 `Authorization: Bearer my-secret-token`。未设置 `MOBILEMCP_AUTH` 时，服务器会接受未经身份验证的连接并记录警告。
+设置后，所有请求都必须带上 `Authorization: Bearer my-secret-token`。未设置 `DEVICE_FARM_MCP_AUTH` 时，服务器会接受未经身份验证的连接并记录警告。
 
 ## 环境变量
 
@@ -431,10 +431,10 @@ MOBILEMCP_AUTH=my-secret-token npx @tomosia/device-farm-mcp@latest --listen 0.0.
 |---|---|---|
 | `DEVICEFARM_PROJECT_ARN` | 用于远程访问会话和应用上传的 AWS Device Farm 项目。 | `arn:aws:devicefarm:us-west-2:111122223333:project:abcd-1234` |
 | `AWS_PROFILE`、`AWS_ACCESS_KEY_ID`、`AWS_SECRET_ACCESS_KEY`、`AWS_SESSION_TOKEN` | AWS SDK 标准凭证。默认凭证链中的其他方式同样适用。 | `AWS_PROFILE=devicefarm` |
-| `MOBILEMCP_AUTH` | 在 Streamable HTTP 服务器（`--listen`）上要求 Bearer 令牌。 | `my-secret-token` |
-| `MOBILEMCP_DISABLE_TELEMETRY` | 禁用匿名使用遥测（PostHog 和 Scarf）。 | `1` |
-| `MOBILEMCP_ALLOW_UNSAFE_URLS` | 允许 `mobile_open_url` 打开非标准 URL 协议（默认阻止）。 | `1` |
-| `MOBILEMCP_LEGACY_ROBOT` | 对本地 Android 设备和 iOS 真机使用旧版的平台专用 robot。iOS 模拟器仍使用 `mobilecli`。 | `1` |
+| `DEVICE_FARM_MCP_AUTH` | 在 Streamable HTTP 服务器（`--listen`）上要求 Bearer 令牌。 | `my-secret-token` |
+| `DEVICE_FARM_MCP_DISABLE_TELEMETRY` | 禁用匿名使用遥测（PostHog 和 Scarf）。 | `1` |
+| `DEVICE_FARM_MCP_ALLOW_UNSAFE_URLS` | 允许 `mobile_open_url` 打开非标准 URL 协议（默认阻止）。 | `1` |
+| `DEVICE_FARM_MCP_LEGACY_ROBOT` | 对本地 Android 设备和 iOS 真机使用旧版的平台专用 robot。iOS 模拟器仍使用 `mobilecli`。 | `1` |
 
 ## 示例提示词
 
@@ -468,4 +468,4 @@ Device Farm MCP 基于 [Mobile Next](https://github.com/mobile-next) 的 [mobile
 
 ## 隐私
 
-服务器运行在你的机器上（HTTP 模式下则运行在你的主机上）。它与你的本地设备通信，对于远程设备，则使用你的凭证与 AWS Device Farm 通信。安装到远程设备上的应用会上传到你的 Device Farm 项目。除非设置 `MOBILEMCP_DISABLE_TELEMETRY=1`，否则会发送匿名使用遥测数据。详情请参阅 Mobile Next 隐私政策：https://mobilenext.ai/privacy。
+服务器运行在你的机器上（HTTP 模式下则运行在你的主机上）。它与你的本地设备通信，对于远程设备，则使用你的凭证与 AWS Device Farm 通信。安装到远程设备上的应用会上传到你的 Device Farm 项目。除非设置 `DEVICE_FARM_MCP_DISABLE_TELEMETRY=1`，否则会发送匿名使用遥测数据。详情请参阅 Mobile Next 隐私政策：https://mobilenext.ai/privacy。

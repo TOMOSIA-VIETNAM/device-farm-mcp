@@ -24,15 +24,15 @@ const startHttpServer = async (host: string, port: number) => {
 			jsonrpc: "2.0",
 			error: {
 				code: -32000,
-				message: "SSE transport removed. mobile-mcp now serves MCP Streamable HTTP at /mcp. See https://github.com/mobile-next/mobile-mcp#streamable-http-server-mode",
+				message: "SSE transport removed. device-farm-mcp now serves MCP Streamable HTTP at /mcp. See https://github.com/TOMOSIA-VIETNAM/device-farm-mcp#streamable-http-server-mode",
 			},
 			id: null,
 		});
 	});
 
-	const authToken = process.env.MOBILEMCP_AUTH;
+	const authToken = process.env.DEVICE_FARM_MCP_AUTH;
 	if (!authToken) {
-		error("WARNING: MOBILEMCP_AUTH is not set. The HTTP server will accept unauthenticated connections. Set MOBILEMCP_AUTH to require Bearer token authentication.");
+		error("WARNING: DEVICE_FARM_MCP_AUTH is not set. The HTTP server will accept unauthenticated connections. Set DEVICE_FARM_MCP_AUTH to require Bearer token authentication.");
 	}
 
 	if (authToken) {
@@ -77,7 +77,7 @@ const startHttpServer = async (host: string, port: number) => {
 	app.delete("/mcp", methodNotAllowed);
 
 	app.listen(port, host, () => {
-		error(`mobile-mcp ${getAgentVersion()} streamable http server listening on http://${host}:${port}/mcp`);
+		error(`device-farm-mcp ${getAgentVersion()} streamable http server listening on http://${host}:${port}/mcp`);
 	});
 };
 
@@ -102,7 +102,7 @@ const startStdioServer = async () => {
 		process.on("SIGINT", shutdown);
 		process.on("SIGTERM", shutdown);
 
-		error(`mobile-mcp ${getAgentVersion()} (mcp sdk ${getSdkVersion()}) server running on stdio`);
+		error(`device-farm-mcp ${getAgentVersion()} (mcp sdk ${getSdkVersion()}) server running on stdio`);
 	} catch (err: any) {
 		console.error("Fatal error in main():", err);
 		error("Fatal error in main(): " + JSON.stringify(err.stack));

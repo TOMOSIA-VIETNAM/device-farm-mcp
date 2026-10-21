@@ -101,19 +101,19 @@ test.describe("utils", () => {
 
 	test.describe("validateOutputPath", () => {
 		test("should accept a path under the os temp directory", () => {
-			const target = path.join(os.tmpdir(), "mobile-mcp-test-output.png");
+			const target = path.join(os.tmpdir(), "device-farm-mcp-test-output.png");
 			expect(() => validateOutputPath(target)).not.toThrow();
 		});
 
 		test("should accept a path under the current working directory", () => {
-			const target = path.join(process.cwd(), "mobile-mcp-test-output.png");
+			const target = path.join(process.cwd(), "device-farm-mcp-test-output.png");
 			expect(() => validateOutputPath(target)).not.toThrow();
 		});
 
 		test("should reject a path outside of the allowed directories", () => {
 			const outside = process.platform === "win32"
-				? "C:\\Windows\\mobile-mcp-test-output.png"
-				: "/etc/mobile-mcp-test-output.png";
+				? "C:\\Windows\\device-farm-mcp-test-output.png"
+				: "/etc/device-farm-mcp-test-output.png";
 
 			expect(() => validateOutputPath(outside)).toThrow();
 		});
@@ -124,7 +124,7 @@ test.describe("utils", () => {
 			// bottoms out at the filesystem root, which can never be a descendant of cwd,
 			// os.tmpdir(), or any other allowed root - regardless of where either lives.
 			const escape = new Array(32).fill("..").join(path.sep);
-			const target = path.join(process.cwd(), escape, "mobile-mcp-test-output.png");
+			const target = path.join(process.cwd(), escape, "device-farm-mcp-test-output.png");
 			expect(() => validateOutputPath(target)).toThrow();
 		});
 
@@ -142,20 +142,20 @@ test.describe("utils", () => {
 
 		test("should reject a path in the home directory when started from the home directory", () => {
 			whileRunningFrom(os.homedir(), () => {
-				expect(() => validateOutputPath(path.join(os.homedir(), "mobile-mcp-test-output.png"))).toThrow();
+				expect(() => validateOutputPath(path.join(os.homedir(), "device-farm-mcp-test-output.png"))).toThrow();
 			});
 		});
 
 		test("should reject a path anywhere on disk when started from the filesystem root", () => {
 			const root = path.parse(process.cwd()).root;
 			whileRunningFrom(root, () => {
-				expect(() => validateOutputPath(path.join(os.homedir(), "mobile-mcp-test-output.png"))).toThrow();
+				expect(() => validateOutputPath(path.join(os.homedir(), "device-farm-mcp-test-output.png"))).toThrow();
 			});
 		});
 
 		test("should still accept the temp directory when started from the home directory", () => {
 			whileRunningFrom(os.homedir(), () => {
-				expect(() => validateOutputPath(path.join(os.tmpdir(), "mobile-mcp-test-output.png"))).not.toThrow();
+				expect(() => validateOutputPath(path.join(os.tmpdir(), "device-farm-mcp-test-output.png"))).not.toThrow();
 			});
 		});
 	});
@@ -165,7 +165,7 @@ test.describe("utils", () => {
 	test.describe("validateOutputPath symlinks", () => {
 		let nameCounter = 0;
 		const createSymlink = (target: string): string => {
-			const link = path.join(process.cwd(), `mobile-mcp-symlink-${process.pid}-${Date.now()}-${nameCounter++}.png`);
+			const link = path.join(process.cwd(), `device-farm-mcp-symlink-${process.pid}-${Date.now()}-${nameCounter++}.png`);
 			fs.rmSync(link, { force: true });
 			fs.symlinkSync(target, link);
 			return link;
@@ -176,7 +176,7 @@ test.describe("utils", () => {
 		test.skip(process.platform === "win32", "creating a symlink needs elevated rights on windows");
 
 		test("should reject a final-component symlink whose target is outside the allowed directories", () => {
-			const link = createSymlink(path.join(path.sep, "mobile-mcp-outside", "escaped.png"));
+			const link = createSymlink(path.join(path.sep, "device-farm-mcp-outside", "escaped.png"));
 			try {
 				expect(() => validateOutputPath(link)).toThrow();
 			} finally {
@@ -185,7 +185,7 @@ test.describe("utils", () => {
 		});
 
 		test("should still accept a final-component symlink whose target stays inside an allowed directory", () => {
-			const link = createSymlink(path.join(os.tmpdir(), "mobile-mcp-symlink-inside.png"));
+			const link = createSymlink(path.join(os.tmpdir(), "device-farm-mcp-symlink-inside.png"));
 			try {
 				expect(() => validateOutputPath(link)).not.toThrow();
 			} finally {
@@ -198,7 +198,7 @@ test.describe("utils", () => {
 		// whole chain has to be followed - stopping at the first hop accepts an
 		// in-root name while the write lands outside it
 		test("should reject a symlink chain whose dangling target is outside the allowed directories", () => {
-			const outside = path.join(path.sep, "mobile-mcp-outside", "escaped.png");
+			const outside = path.join(path.sep, "device-farm-mcp-outside", "escaped.png");
 			const first = createSymlink(outside);
 			const second = createSymlink(path.basename(first));
 			try {
@@ -211,7 +211,7 @@ test.describe("utils", () => {
 		});
 
 		test("should still accept a symlink chain whose target stays inside an allowed directory", () => {
-			const first = createSymlink(path.join(os.tmpdir(), "mobile-mcp-chain-inside.png"));
+			const first = createSymlink(path.join(os.tmpdir(), "device-farm-mcp-chain-inside.png"));
 			const second = createSymlink(path.basename(first));
 			try {
 				expect(() => validateOutputPath(first)).not.toThrow();
@@ -223,7 +223,7 @@ test.describe("utils", () => {
 		});
 
 		test("should reject a symlink cycle", () => {
-			const first = createSymlink(path.join(process.cwd(), "mobile-mcp-cycle-placeholder.png"));
+			const first = createSymlink(path.join(process.cwd(), "device-farm-mcp-cycle-placeholder.png"));
 			const second = createSymlink(path.basename(first));
 			fs.rmSync(first);
 			fs.symlinkSync(path.basename(second), first);
@@ -241,7 +241,7 @@ test.describe("utils", () => {
 	test.describe("writeOutputFile", () => {
 		test.skip(process.platform === "win32", "creating a symlink needs elevated rights on windows");
 
-		const uniqueTempPath = (name: string): string => path.join(os.tmpdir(), `mobile-mcp-${process.pid}-${Date.now()}-${name}`);
+		const uniqueTempPath = (name: string): string => path.join(os.tmpdir(), `device-farm-mcp-${process.pid}-${Date.now()}-${name}`);
 
 		test("should not write through a symlink planted after the path was validated", () => {
 			const victim = uniqueTempPath("victim.txt");
@@ -275,7 +275,7 @@ test.describe("utils", () => {
 	test.describe("moveOutputFile", () => {
 		test.skip(process.platform === "win32", "creating a symlink needs elevated rights on windows");
 
-		const uniqueTempPath = (name: string): string => path.join(os.tmpdir(), `mobile-mcp-${process.pid}-${Date.now()}-${name}`);
+		const uniqueTempPath = (name: string): string => path.join(os.tmpdir(), `device-farm-mcp-${process.pid}-${Date.now()}-${name}`);
 
 		test("should not move a recording through a symlink planted at the output path", () => {
 			const victim = uniqueTempPath("victim.txt");
@@ -314,7 +314,7 @@ test.describe("utils", () => {
 	});
 
 	test.describe("finishRecording", () => {
-		const uniqueTempPath = (name: string): string => path.join(os.tmpdir(), `mobile-mcp-${process.pid}-${Date.now()}-${name}`);
+		const uniqueTempPath = (name: string): string => path.join(os.tmpdir(), `device-farm-mcp-${process.pid}-${Date.now()}-${name}`);
 
 		// rename fails with EXDEV when the private directory and the output live on
 		// different filesystems; simulate that and a copy that fails halfway
