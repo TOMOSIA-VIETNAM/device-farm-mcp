@@ -322,7 +322,7 @@ Device Farm から Android 14 以上の Android デバイスを確保し、準�
 | ステップ | ツール | 備考 |
 |---|---|---|
 | デバイスを探す | `mobile_list_remote_devices` | リモートアクセスが有効なデバイスのみ表示されます。 |
-| 確保する | `mobile_allocate_remote_device` | `platform`（必須）、`name`（完全一致、または末尾 `*` で前方一致。例: `Google Pixel*`）、`version`（例: `">=14"`、`"18.6.2"`）で絞り込めます。`wait: true` を指定すると、セッションが実行中になるまで最大 `timeoutSeconds`（デフォルト 900）待機します。空き状況が良いデバイスが優先されます。 |
+| 確保する | `mobile_allocate_remote_device` | `platform`（必須）、`name`（完全一致、または末尾 `*` で前方一致。例: `Google Pixel*`）、`version`（例: `">=14"`、`"18.6.2"`）で絞り込めます。`wait: true` を指定すると、セッションが実行中になるまで最大 `timeoutSeconds`（デフォルト 900）待機します。実行中になると、結果にデバイスをライブで閲覧・操作できるブラウザページ `viewerUrl` が含まれます。空き状況が良いデバイスが優先されます。 |
 | アプリをインストールする | `mobile_install_app` | ローカルのファイルをプロジェクトにアップロードし、Device Farm の処理完了を待ってからセッションにインストールします。Android は `.apk`、iOS は `.ipa` のみ対応です。 |
 | アプリを操作する | その他の `mobile_*` ツール | `device` にセッション ARN を渡します。 |
 | 解放する | `mobile_release_remote_device` | セッションと課金を停止します。インストールしたアプリやデバイスの状態は消去されます。 |

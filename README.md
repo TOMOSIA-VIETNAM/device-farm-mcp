@@ -322,7 +322,7 @@ What happens under the hood:
 | Step | Tool | Notes |
 |---|---|---|
 | Find a device | `mobile_list_remote_devices` | Only devices with remote access enabled are listed. |
-| Reserve it | `mobile_allocate_remote_device` | Filter by `platform` (required), `name` (exact, or prefix with a trailing `*`, e.g. `Google Pixel*`) and `version` (e.g. `">=14"`, `"18.6.2"`). With `wait: true` it blocks until the session is running, up to `timeoutSeconds` (default 900). Highly available devices are preferred. |
+| Reserve it | `mobile_allocate_remote_device` | Filter by `platform` (required), `name` (exact, or prefix with a trailing `*`, e.g. `Google Pixel*`) and `version` (e.g. `">=14"`, `"18.6.2"`). With `wait: true` it blocks until the session is running, up to `timeoutSeconds` (default 900). Once running, the result includes `viewerUrl`, a browser page to watch and control the device live. Highly available devices are preferred. |
 | Install the app | `mobile_install_app` | Uploads the local file to the project, waits for Device Farm to process it, then installs it into the session. Android accepts `.apk`, iOS accepts `.ipa`. |
 | Drive the app | other `mobile_*` tools | Pass the session ARN as `device`. |
 | Release it | `mobile_release_remote_device` | Stops the session and billing. Installed apps and device state are wiped. |

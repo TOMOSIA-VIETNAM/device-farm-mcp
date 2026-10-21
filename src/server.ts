@@ -447,6 +447,7 @@ export const createMcpServer = (): McpServer => {
 		"Unlike local devices, a remote device is a billed resource borrowed for the session - never call this silently. If no local device is available, offer a remote device to the user and call this only after they agree. " +
 		"Use mobile_list_remote_devices first to see which names and versions actually exist before filtering by them. " +
 		"The session ends by itself after 150 minutes, or after 5 minutes without any command. " +
+		"Once the session is running (wait: true), the result includes viewerUrl, a browser page where the user can watch and control the device live - give it to the user. " +
 		"Release the device with mobile_release_remote_device once the whole task is finished - releasing wipes the device's state, so do not release and reallocate between steps of the same task just to be tidy.",
 		{
 			platform: z.enum(["ios", "android"]).describe("The platform to allocate a device for"),

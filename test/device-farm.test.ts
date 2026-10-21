@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { isDeviceFarmSessionArn, matchesName, matchesVersion } from "../src/device-farm";
+import { isDeviceFarmSessionArn, matchesName, matchesVersion, toSession } from "../src/device-farm";
 import { parseAndroidSource, parseIosSource } from "../src/appium-robot";
 
 const SESSION_ARN = "arn:aws:devicefarm:us-west-2:111122223333:session:abcdef12-1234/abcdef12-5678/00000";
@@ -9,6 +9,18 @@ test("recognizes device farm session arns as device ids", () => {
 	expect(isDeviceFarmSessionArn(SESSION_ARN)).toBe(true);
 	expect(isDeviceFarmSessionArn("arn:aws:devicefarm:us-west-2:111122223333:project:abcdef12-1234")).toBe(false);
 	expect(isDeviceFarmSessionArn("emulator-5554")).toBe(false);
+});
+
+test("exposes the interactive endpoint of a running session as its viewer url", () => {
+	const session = toSession({
+		arn: SESSION_ARN,
+		status: "RUNNING",
+		device: { platform: "ANDROID", name: "Google Pixel 8", os: "14" },
+		endpoints: { remoteDriverEndpoint: "https://appium.example/wd/hub", interactiveEndpoint: "https://viewer.example/session" },
+	});
+	expect(session.endpoint).toBe("https://appium.example/wd/hub");
+	expect(session.viewerUrl).toBe("https://viewer.example/session");
+	expect(toSession({ arn: SESSION_ARN, status: "PENDING" }).viewerUrl).toBeUndefined();
 });
 
 test("matches device names exactly or by trailing wildcard, ignoring case", () => {

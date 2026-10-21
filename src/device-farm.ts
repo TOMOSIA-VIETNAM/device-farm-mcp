@@ -44,6 +44,8 @@ export interface DeviceFarmSession {
 	deviceName?: string;
 	osVersion?: string;
 	endpoint?: string;
+	// browser page to watch and control the device, published once the session is running
+	viewerUrl?: string;
 }
 
 export const isDeviceFarmSessionArn = (deviceId: string): boolean => deviceId.startsWith(SESSION_ARN_PREFIX) && deviceId.includes(":session:");
@@ -91,13 +93,14 @@ export const matchesName = (deviceName: string, filter: string): boolean => {
 
 const toPlatform = (platform: string | undefined): DeviceFarmPlatform => platform === "IOS" ? "ios" : "android";
 
-const toSession = (session: RemoteAccessSession): DeviceFarmSession => ({
+export const toSession = (session: RemoteAccessSession): DeviceFarmSession => ({
 	arn: session.arn!,
 	status: session.status || "UNKNOWN",
 	platform: toPlatform(session.device?.platform),
 	deviceName: session.device?.name,
 	osVersion: session.device?.os,
 	endpoint: session.endpoints?.remoteDriverEndpoint,
+	viewerUrl: session.endpoints?.interactiveEndpoint,
 });
 
 export class DeviceFarm {
@@ -189,6 +192,7 @@ export class DeviceFarm {
 			platform: session.platform,
 			version: session.osVersion,
 			status: session.status,
+			viewerUrl: session.viewerUrl,
 		});
 	}
 

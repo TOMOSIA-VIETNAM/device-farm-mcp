@@ -321,7 +321,7 @@ gemini mcp add device-farm-mcp \
 | 步骤 | 工具 | 说明 |
 |---|---|---|
 | 查找设备 | `mobile_list_remote_devices` | 只列出启用了远程访问的设备。 |
-| 预留设备 | `mobile_allocate_remote_device` | 可按 `platform`（必填）、`name`（完全匹配，或以 `*` 结尾进行前缀匹配，例如 `Google Pixel*`）和 `version`（例如 `">=14"`、`"18.6.2"`）筛选。设置 `wait: true` 时会阻塞等待会话进入运行状态，最长 `timeoutSeconds`（默认 900）秒。优先选择可用性高的设备。 |
+| 预留设备 | `mobile_allocate_remote_device` | 可按 `platform`（必填）、`name`（完全匹配，或以 `*` 结尾进行前缀匹配，例如 `Google Pixel*`）和 `version`（例如 `">=14"`、`"18.6.2"`）筛选。设置 `wait: true` 时会阻塞等待会话进入运行状态，最长 `timeoutSeconds`（默认 900）秒。会话运行后，结果中包含 `viewerUrl`，可在浏览器中实时查看和操作设备。优先选择可用性高的设备。 |
 | 安装应用 | `mobile_install_app` | 将本地文件上传到项目，等待 Device Farm 处理完成后安装到会话中。Android 仅支持 `.apk`，iOS 仅支持 `.ipa`。 |
 | 操作应用 | 其他 `mobile_*` 工具 | 将会话 ARN 作为 `device` 传入。 |
 | 释放设备 | `mobile_release_remote_device` | 停止会话和计费。已安装的应用和设备状态会被清除。 |
