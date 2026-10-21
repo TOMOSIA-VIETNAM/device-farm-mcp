@@ -1,3 +1,8 @@
+## [0.1.0](https://github.com/TOMOSIA-VIETNAM/device-farm-mcp/releases/tag/0.1.0) (2026-10-21)
+* Breaking: environment variables are renamed from `MOBILEMCP_*` to `DEVICE_FARM_MCP_*` (`AUTH`, `DISABLE_TELEMETRY`, `ALLOW_UNSAFE_URLS`, `LEGACY_ROBOT`); the old names are no longer read
+* Feat: `mobile_allocate_remote_device` returns `viewerUrl`, a browser page to watch and control the AWS Device Farm device live, once the session is running (`wait: true`)
+* Chore: rename the server, plugin and manifests from mobile-mcp to device-farm-mcp
+
 ## [1.0.12](https://github.com/mobile-next/mobile-mcp/releases/tag/1.0.12) (2026-10-18)
 * Feat: `mobile_get_foreground_app` reports the focused activity on Android and the view controller on iOS ([#512](https://github.com/mobile-next/mobile-mcp/pull/512))
 * Fix: Large UI dumps no longer fail with `ENOBUFS` when reading mobilecli's output ([#518](https://github.com/mobile-next/mobile-mcp/pull/518)), thanks to [@whitelancefly](https://github.com/whitelancefly) and [@DanielMcSheehy](https://github.com/DanielMcSheehy)

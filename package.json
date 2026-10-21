@@ -1,7 +1,7 @@
 {
   "name": "@tomosia/device-farm-mcp",
   "mcpName": "io.github.TOMOSIA-VIETNAM/device-farm-mcp",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "MCP server for iOS and Android automation on local devices and AWS Device Farm",
   "repository": {
     "type": "git",
